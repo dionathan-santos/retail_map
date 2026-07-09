@@ -9,7 +9,8 @@ rationale.
 
 - **Map renderer:** MapLibre GL JS
 - **Basemap tiles:** Protomaps, served from Cloudflare R2 (placeholder URL in
-  `src/map.js` until the real bucket is provisioned)
+  `src/map.js` until the real bucket is provisioned). Basemap styling comes
+  from the official `@protomaps/basemaps` "light" theme.
 - **Hosting:** Cloudflare Pages
 - **Print export:** client-side canvas capture + jsPDF (no server rendering)
 
