@@ -1,0 +1,143 @@
+:root {
+  --brand-navy: #1F4E79;
+  --brand-ink: #1A1A1A;
+  --panel-bg: #FFFFFF;
+  --panel-border: #D9D9D9;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: "Segoe UI", -apple-system, sans-serif;
+  color: var(--brand-ink);
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+}
+
+#app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--brand-navy);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+#app-header button {
+  background: white;
+  color: var(--brand-navy);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#app-header button:hover {
+  background: #EAF1F8;
+}
+
+.panel {
+  position: absolute;
+  z-index: 10;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  font-size: 13px;
+}
+
+#layer-toggle-panel {
+  top: 60px;
+  left: 12px;
+  min-width: 200px;
+}
+
+#layer-toggle-panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--brand-navy);
+}
+
+#layer-toggle-panel label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  cursor: pointer;
+}
+
+#legend-panel {
+  bottom: 24px;
+  left: 12px;
+  max-width: 220px;
+}
+
+#legend-panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--brand-navy);
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-line {
+  width: 20px;
+  height: 0;
+  border-top: 3px solid var(--brand-navy);
+  flex-shrink: 0;
+}
+
+.legend-line.secondary {
+  border-top-style: dashed;
+  border-top-width: 2px;
+}
+
+.maplibregl-popup-content {
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.maplibregl-popup-content h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--brand-navy);
+}
+
+.traffic-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7A1F1F;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}

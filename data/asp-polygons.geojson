@@ -1,0 +1,43 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "asp_name": "ASP 101 - Mature Neighbourhoods",
+        "population": 18420,
+        "households": 8760,
+        "avg_household_income": 92500
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-113.5300, 53.5150],
+          [-113.4950, 53.5150],
+          [-113.4950, 53.5300],
+          [-113.5300, 53.5300],
+          [-113.5300, 53.5150]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "asp_name": "ASP 214 - South Edmonton Suburban",
+        "population": 34210,
+        "households": 12980,
+        "avg_household_income": 118400
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-113.5150, 53.4550],
+          [-113.4650, 53.4550],
+          [-113.4650, 53.4750],
+          [-113.5150, 53.4750],
+          [-113.5150, 53.4550]
+        ]]
+      }
+    }
+  ]
+}

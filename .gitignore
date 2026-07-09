@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Curated Excel source files are private CRE data — do not commit real data.
+data-sources/*.xlsx
+!data-sources/README.md
