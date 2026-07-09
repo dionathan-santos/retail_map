@@ -28,6 +28,41 @@ source is a placeholder until a real Protomaps R2 bucket URL is set in
 `src/map.js` — data layers (POIs, zones, ASP polygons, traffic labels) all
 render against the placeholder background.
 
+### Building the basemap PMTiles file
+
+The basemap needs a `.pmtiles` file built from an OpenStreetMap extract
+(`.osm.pbf`) of the Edmonton region — see `src/map.js`'s `PROTOMAPS_URL`.
+Two ways to build it, depending on whether you can install software
+locally:
+
+**With Docker installed:**
+
+```bash
+git clone https://github.com/protomaps/basemaps.git
+cd basemaps/tiles
+docker build -t protomaps/basemaps .
+docker run -v "$(pwd)/data:/tiles/data" --rm -it protomaps/basemaps \
+  --osm-path=data/your-extract.osm.pbf --output=data/edmonton.pmtiles --force
+```
+
+**Without installing anything (GitHub Actions):**
+
+Use the `.github/workflows/build-pmtiles.yml` workflow — it does the same
+build on GitHub's servers instead of your machine:
+
+1. Upload your `.osm.pbf` extract as a **GitHub Release asset** (repo →
+   Releases → Draft a new release → attach the file → publish). Release
+   assets support large files via the browser, no `git` needed. Copy the
+   asset's download link (right-click it → Copy Link Address).
+2. Repo → **Actions** tab → **Build Protomaps PMTiles** workflow → **Run
+   workflow** → paste that URL into `osm_pbf_url` → Run.
+3. When the run finishes (a few minutes), open it and download the
+   `pmtiles-output` artifact from the summary page — it contains the
+   `.pmtiles` file.
+
+Either way, the resulting `.pmtiles` file still needs to be uploaded to
+the Cloudflare R2 bucket referenced by `PROTOMAPS_URL` in `src/map.js`.
+
 ## Data pipeline
 
 ```bash
