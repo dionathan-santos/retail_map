@@ -81,6 +81,46 @@ html, body {
   cursor: pointer;
 }
 
+#draw-panel {
+  top: 60px;
+  right: 12px;
+  min-width: 200px;
+}
+
+#draw-panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--brand-navy);
+}
+
+#draw-panel select {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 4px;
+}
+
+.draw-toolbar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.draw-toolbar-buttons button {
+  flex: 1 1 auto;
+  font-size: 12px;
+  padding: 5px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: #F5F7FA;
+  cursor: pointer;
+}
+
+.draw-toolbar-buttons button:hover {
+  background: #EAF1F8;
+}
+
 #legend-panel {
   bottom: 24px;
   left: 12px;

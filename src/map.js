@@ -1,6 +1,6 @@
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
-import { layers as protomapsLayers, LIGHT as PROTOMAPS_LIGHT } from "@protomaps/basemaps";
+import { layers as protomapsLayers, GRAYSCALE as PROTOMAPS_THEME } from "@protomaps/basemaps";
 import { CATEGORIES, categoryColor, ZONE_TIER_STYLE } from "./styles/categories.js";
 
 // Placeholder — swap for the real Cloudflare R2 bucket URL once provisioned.
@@ -48,7 +48,7 @@ function buildStyle() {
     },
     // Official Protomaps "light" basemap theme, keyed off the same
     // "protomaps" schema used by the tiles in PROTOMAPS_URL.
-    layers: protomapsLayers("protomaps", PROTOMAPS_LIGHT, { lang: "en" }),
+    layers: protomapsLayers("protomaps", PROTOMAPS_THEME, { lang: "en" }),
   };
 }
 
