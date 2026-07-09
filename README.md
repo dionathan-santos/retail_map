@@ -59,17 +59,33 @@ drawn directly on the map using the "Desenhar no mapa" panel (top-right):
 pick a layer, draw the polygon, and fill in its attributes (zone
 name/tier, or ASP population/households/income) when prompted.
 
-Drawn shapes are currently saved to the browser's `localStorage` only —
-they persist across reloads on the same device/browser, but aren't shared
-with anyone else or committed to the repo automatically. Use "Exportar
-GeoJSON" to download the current shapes and manually replace
-`data/retail-zones.geojson` / `data/asp-polygons.geojson`, then commit.
+Drawn shapes are persisted to a Cloudflare D1 database via
+`functions/api/features/[layerKey].js`, with `localStorage` as a local
+cache/fallback (used automatically if the API is unreachable — e.g.
+offline, or running `npm run dev` without `wrangler pages dev`, since
+Vite's dev server doesn't run Pages Functions). Use "Exportar GeoJSON" any
+time to download the current shapes as a backup or to seed
+`data/retail-zones.geojson` / `data/asp-polygons.geojson` for the
+non-editable baseline layers.
 
-This is a placeholder until real persistence is wired up — either
-Firestore (reusing the CM Land Tracker project, per the original spec) or
-a small Cloudflare Worker + D1/KV binding (staying entirely inside
-Cloudflare, no Firebase dependency). That decision is still open; ask
-before building either one.
+### Persisting drawn shapes (Cloudflare D1)
+
+One-time setup, done in the Cloudflare dashboard:
+
+1. **Workers & Pages → D1 → Create database.** Name it e.g. `retail-map-db`.
+2. Open the new database → **Console** tab → paste the contents of
+   `schema.sql` (repo root) → **Execute**. This creates the one table the
+   API uses.
+3. Go to your **Pages project → Settings → Functions → D1 database
+   bindings → Add binding**. Variable name: `DB`. D1 database: the one you
+   just created. Save.
+4. Trigger a new deploy (push anything to `master`, or use "Retry
+   deployment" on the latest one in the Pages dashboard) so the binding
+   takes effect.
+
+That's it — the "Desenhar no mapa" panel will start saving to D1
+automatically once the binding exists. No code changes needed for this
+part.
 
 ## Build & deploy
 

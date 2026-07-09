@@ -1,10 +1,9 @@
 import { TerraDraw, TerraDrawPolygonMode, TerraDrawSelectMode } from "terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 
-// Local-only persistence for now (see README "Digitizing zones & ASP
-// polygons in-app"): drawn shapes are kept in localStorage per layer, plus
-// an "Export GeoJSON" button so they can be committed to /data once a
-// backend (Firestore or a Cloudflare Worker/D1) is wired up later.
+// Persisted to Cloudflare D1 via functions/api/features/[layerKey].js, with
+// localStorage as a local cache/fallback — useful offline, and during local
+// `vite dev` since Pages Functions only run under `wrangler pages dev`.
 const STORAGE_KEY_PREFIX = "retail-map:draw:";
 
 // Per-layer prompts for the attributes each polygon needs, matching the
@@ -26,7 +25,7 @@ function storageKey(layerKey) {
   return `${STORAGE_KEY_PREFIX}${layerKey}`;
 }
 
-function loadFeatures(layerKey) {
+function loadFromLocalCache(layerKey) {
   const raw = localStorage.getItem(storageKey(layerKey));
   if (!raw) return [];
   try {
@@ -36,8 +35,39 @@ function loadFeatures(layerKey) {
   }
 }
 
+function writeLocalCache(layerKey, features) {
+  localStorage.setItem(storageKey(layerKey), JSON.stringify({ features }));
+}
+
+async function loadFeatures(layerKey) {
+  try {
+    const res = await fetch(`/api/features/${layerKey}`);
+    if (res.ok) {
+      const { features } = await res.json();
+      writeLocalCache(layerKey, features);
+      return features;
+    }
+  } catch {
+    // offline, or local dev server without Pages Functions — use the cache
+  }
+  return loadFromLocalCache(layerKey);
+}
+
 function saveFeatures(layerKey, features) {
-  localStorage.setItem(storageKey(layerKey), JSON.stringify({ type: "FeatureCollection", features }));
+  writeLocalCache(layerKey, features);
+  fetch(`/api/features/${layerKey}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ features }),
+  }).catch(() => {
+    // D1 sync failed silently — the local cache still has the latest
+    // snapshot and the next successful save will resync it in full.
+  });
+}
+
+function clearFeatures(layerKey) {
+  localStorage.removeItem(storageKey(layerKey));
+  fetch(`/api/features/${layerKey}`, { method: "DELETE" }).catch(() => {});
 }
 
 function promptForAttributes(layerKey) {
@@ -64,8 +94,8 @@ function downloadGeoJson(layerKey, features) {
 /**
  * A single TerraDraw instance shared across drawable layers (zones, ASP
  * polygons). Only one instance runs against the map at a time — switching
- * the active layer saves the current shapes to that layer's localStorage
- * slot, clears the canvas, and loads the other layer's saved shapes.
+ * the active layer saves the current shapes for that layer, clears the
+ * canvas, and loads the other layer's saved shapes.
  */
 export function createDrawTool(map) {
   const draw = new TerraDraw({
@@ -98,12 +128,12 @@ export function createDrawTool(map) {
 
   draw.on("change", persistActiveLayer);
 
-  function setActiveLayer(layerKey) {
+  async function setActiveLayer(layerKey) {
     if (layerKey === activeLayerKey) return;
     persistActiveLayer();
     draw.clear();
     activeLayerKey = layerKey;
-    const features = loadFeatures(layerKey);
+    const features = await loadFeatures(layerKey);
     if (features.length) draw.addFeatures(features);
     draw.setMode("static");
   }
@@ -115,7 +145,7 @@ export function createDrawTool(map) {
     stopDrawing: () => draw.setMode("static"),
     clear: () => {
       draw.clear();
-      if (activeLayerKey) localStorage.removeItem(storageKey(activeLayerKey));
+      if (activeLayerKey) clearFeatures(activeLayerKey);
     },
     exportGeoJson: () => downloadGeoJson(activeLayerKey, draw.getSnapshot()),
   };
