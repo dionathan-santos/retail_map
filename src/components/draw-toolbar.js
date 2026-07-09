@@ -23,7 +23,7 @@ export function renderDrawToolbar(map) {
   panel.appendChild(select);
 
   const tool = createDrawTool(map);
-  select.addEventListener("change", () => tool.setActiveLayer(select.value));
+  select.addEventListener("change", async () => tool.setActiveLayer(select.value));
   tool.setActiveLayer(select.value);
 
   const buttonRow = document.createElement("div");

@@ -5,3 +5,14 @@ pages_build_output_dir = "dist"
 # Protomaps basemap tiles are served from a Cloudflare R2 bucket, referenced
 # directly by URL in src/map.js (no Worker binding required for static reads).
 # Swap PROTOMAPS_URL in src/map.js once the real bucket is provisioned.
+
+# D1 binding used by functions/api/features/[layerKey].js to persist
+# hand-drawn zones/ASP polygons. This block only matters for local
+# `wrangler pages dev` testing — the binding that actually applies in
+# production is configured in the Pages project's dashboard under
+# Settings > Functions > D1 database bindings (variable name must be "DB").
+# See README.md "Persisting drawn shapes (Cloudflare D1)".
+[[d1_databases]]
+binding = "DB"
+database_name = "retail-map-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
