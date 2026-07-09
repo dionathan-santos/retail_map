@@ -14,7 +14,9 @@
     "@turf/turf": "^7.1.0",
     "jspdf": "^2.5.2",
     "maplibre-gl": "^4.7.1",
-    "pmtiles": "^3.2.1"
+    "pmtiles": "^3.2.1",
+    "terra-draw": "^1.31.2",
+    "terra-draw-maplibre-gl-adapter": "^1.4.1"
   },
   "devDependencies": {
     "vite": "^5.4.11"

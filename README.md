@@ -10,7 +10,9 @@ rationale.
 - **Map renderer:** MapLibre GL JS
 - **Basemap tiles:** Protomaps, served from Cloudflare R2 (placeholder URL in
   `src/map.js` until the real bucket is provisioned). Basemap styling comes
-  from the official `@protomaps/basemaps` "light" theme.
+  from the official `@protomaps/basemaps` "grayscale" theme (closest match to
+  the source PDF's minimalist line-based look — swap for `WHITE`, `LIGHT`,
+  `DARK`, or `BLACK` in `src/map.js` if a different look is wanted).
 - **Hosting:** Cloudflare Pages
 - **Print export:** client-side canvas capture + jsPDF (no server rendering)
 
@@ -49,6 +51,25 @@ boundaries change.
 This is a manually-triggered pipeline for v1 (see spec §4) — no GitHub Action
 watches `data-sources/` yet. That's a reasonable next step once the manual
 flow proves out.
+
+### Digitizing zones & ASP polygons in-app
+
+Instead of editing GeoJSON by hand, retail zones and ASP polygons can be
+drawn directly on the map using the "Desenhar no mapa" panel (top-right):
+pick a layer, draw the polygon, and fill in its attributes (zone
+name/tier, or ASP population/households/income) when prompted.
+
+Drawn shapes are currently saved to the browser's `localStorage` only —
+they persist across reloads on the same device/browser, but aren't shared
+with anyone else or committed to the repo automatically. Use "Exportar
+GeoJSON" to download the current shapes and manually replace
+`data/retail-zones.geojson` / `data/asp-polygons.geojson`, then commit.
+
+This is a placeholder until real persistence is wired up — either
+Firestore (reusing the CM Land Tracker project, per the original spec) or
+a small Cloudflare Worker + D1/KV binding (staying entirely inside
+Cloudflare, no Firebase dependency). That decision is still open; ask
+before building either one.
 
 ## Build & deploy
 
