@@ -1,10 +1,7 @@
 import { TOGGLEABLE_LAYERS, setLayerVisibility } from "../map.js";
 
 const LAYER_LABELS = {
-  "toggle-pois": "Retail POIs",
-  "toggle-zones": "Retail Zones",
-  "toggle-asp": "ASP / Population",
-  "toggle-traffic": "Traffic Counts",
+  "toggle-points": "Retail Points",
 };
 
 export function renderLayerTogglePanel(map) {

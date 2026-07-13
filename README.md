@@ -1,16 +1,21 @@
 # Edmonton Retail Market Intelligence Map
 
-Interactive retail market intelligence map for Edmonton, AB — a sub-application
-of the CM Land Tracker Firebase project, reusing its layer-toggle and export
-patterns. See `RETAIL_MAP_SPEC.md` (project spec) for full architecture
-rationale.
+A web app for plotting your own retail points on top of an existing base
+map (an Avison Young-style vector map, rendered from PDF), individually or
+in bulk. `RETAIL_MAP_SPEC.md` is the original v1 spec; the v2 pivot
+(current architecture) replaced the Protomaps/GIS-pipeline approach
+described there with a static georeferenced base map + user-added points.
 
 ## Stack
 
 - **Map renderer:** MapLibre GL JS
-- **Basemap tiles:** Protomaps, served from Cloudflare R2 (placeholder URL in
-  `src/map.js` until the real bucket is provisioned)
+- **Basemap:** the Avison Young base map (`assets/source/Retail map_no
+  icons.pdf`), rendered once to a high-res PNG and georeferenced with the
+  existing affine transform, then loaded as a MapLibre raster/image source.
 - **Hosting:** Cloudflare Pages
+- **Data:** Cloudflare D1 (SQL), accessed through Cloudflare Pages Functions
+  (`/functions/api/*`) — single-point-add and bulk-upload both write to the
+  same `points` table.
 - **Print export:** client-side canvas capture + jsPDF (no server rendering)
 
 ## Local development
@@ -20,34 +25,59 @@ npm install
 npm run dev
 ```
 
-This serves the app with mock data from `/data/*.geojson`. The basemap tile
-source is a placeholder until a real Protomaps R2 bucket URL is set in
-`src/map.js` — data layers (POIs, zones, ASP polygons, traffic labels) all
-render against the placeholder background.
+The dev server needs the D1 API routes to work locally too:
 
-## Data pipeline
+```bash
+npx wrangler pages dev -- npm run dev
+```
+
+## One-time setup
+
+### 1. Render the base map
+
+Already generated and committed (`public/basemap.png` + `src/basemap-config.json`).
+Re-run only if the source PDF changes:
+
+```bash
+pip install pymupdf numpy
+python3 scripts/render-basemap.py
+```
+
+### 2. Provision D1
+
+```bash
+npx wrangler d1 create retail-map-db
+# paste the returned database_id into wrangler.toml
+npx wrangler d1 execute retail-map-db --file=schema.sql
+```
+
+## Data pipeline (bulk points)
+
+The primary path is the app's own **Bulk Upload** panel: upload an Excel
+file with columns `name, category, lat, lng, address, status, source,
+last_updated` (same convention as CM Land Tracker) and it's parsed
+client-side and posted to `/api/points/bulk`.
+
+For scripted/CLI imports, `scripts/excel-to-geojson.py` can push the same
+rows straight into a deployed instance:
 
 ```bash
 pip install -r scripts/requirements.txt
 
-# 1. Enrich curated Excel rows missing lat/lng
+# fill in missing lat/lng from address, if needed
 python scripts/geocode.py data-sources/grocery.xlsx
 
-# 2. Convert curated Excel -> POI GeoJSON
-python scripts/excel-to-geojson.py data-sources/*.xlsx data/retail-pois.geojson
-
-# 3. Refresh traffic counts from open data
-python scripts/fetch-traffic.py data/traffic-counts.geojson
+# push straight into the deployed D1 database
+python scripts/excel-to-geojson.py data-sources/grocery.xlsx --api-url https://retail-map.pages.dev
 ```
 
-Retail zone boundaries (`data/retail-zones.geojson`) and ASP polygons
-(`data/asp-polygons.geojson`) are manually digitized — there's no reliable
-public source, so edit those GeoJSON files directly (e.g. in geojson.io) when
-boundaries change.
+## Icon customization
 
-This is a manually-triggered pipeline for v1 (see spec §4) — no GitHub Action
-watches `data-sources/` yet. That's a reasonable next step once the manual
-flow proves out.
+Default category → color/shape mirrors the original Avison Young legend
+(`src/styles/categories.js`: `DEFAULT_CATEGORIES`). The **Category Icons**
+panel in the app lets you override color/shape per category without
+touching code; overrides are saved to D1 (`category_styles` table) and
+picked up by both the interactive map and the print export.
 
 ## Build & deploy
 
@@ -55,17 +85,16 @@ flow proves out.
 npm run build   # outputs to dist/
 ```
 
-Deploy path is GitHub → Cloudflare Pages (`wrangler.toml`). Connect the repo
-in the Cloudflare Pages dashboard for auto-deploy on push to `main`.
+Deploy path is GitHub → Cloudflare Pages (`wrangler.toml`, with the D1
+binding). Connect the repo in the Cloudflare Pages dashboard for
+auto-deploy on push to `master`.
 
 ## Layers
 
 | Layer | Source | Toggle |
 |---|---|---|
-| Retail POIs | `data/retail-pois.geojson` | `#toggle-pois` |
-| Retail zones | `data/retail-zones.geojson` | `#toggle-zones` |
-| ASP polygons (population) | `data/asp-polygons.geojson` | `#toggle-asp` |
-| Traffic counts | `data/traffic-counts.geojson` | `#toggle-traffic` |
+| Base map | `public/basemap.png` (raster, georeferenced) | — |
+| Retail points | D1 via `/api/points` | `#toggle-points` |
 
 ## Print export
 

@@ -2,6 +2,12 @@ name = "retail-map"
 compatibility_date = "2024-11-01"
 pages_build_output_dir = "dist"
 
-# Protomaps basemap tiles are served from a Cloudflare R2 bucket, referenced
-# directly by URL in src/map.js (no Worker binding required for static reads).
-# Swap PROTOMAPS_URL in src/map.js once the real bucket is provisioned.
+# D1 database backing /functions/api/* (points + category style overrides).
+# Create it once with:
+#   wrangler d1 create retail-map-db
+# then paste the returned database_id below, and apply schema.sql:
+#   wrangler d1 execute retail-map-db --file=schema.sql
+[[d1_databases]]
+binding = "DB"
+database_name = "retail-map-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
