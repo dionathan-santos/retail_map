@@ -139,6 +139,9 @@ in the Cloudflare Pages dashboard for auto-deploy on push to `main`.
 | Retail zones | `data/retail-zones.geojson` | `#toggle-zones` |
 | ASP polygons (population) | `data/asp-polygons.geojson` | `#toggle-asp` |
 | Traffic counts | `data/traffic-counts.geojson` | `#toggle-traffic` |
+| Residential areas | `data/residential-areas.geojson` | `#toggle-residential` |
+| Employment areas | `data/employment-areas.geojson` | `#toggle-employment` |
+| LRT (current/future) | `data/lrt-lines.geojson` | `#toggle-lrt` |
 
 ## Print export
 

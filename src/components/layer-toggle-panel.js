@@ -5,6 +5,9 @@ const LAYER_LABELS = {
   "toggle-zones": "Retail Zones",
   "toggle-asp": "ASP / Population",
   "toggle-traffic": "Traffic Counts",
+  "toggle-residential": "Residential Areas",
+  "toggle-employment": "Employment Areas",
+  "toggle-lrt": "LRT (Current/Future)",
 };
 
 export function renderLayerTogglePanel(map) {

@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "area_name": "Windermere" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-113.6100, 53.4450],
+          [-113.5850, 53.4450],
+          [-113.5850, 53.4650],
+          [-113.6100, 53.4650],
+          [-113.6100, 53.4450]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "area_name": "Heritage Valley" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-113.5450, 53.4150],
+          [-113.5150, 53.4150],
+          [-113.5150, 53.4380],
+          [-113.5450, 53.4380],
+          [-113.5450, 53.4150]
+        ]]
+      }
+    }
+  ]
+}
