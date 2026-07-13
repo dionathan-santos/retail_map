@@ -1,6 +1,6 @@
 import { CATEGORIES } from "../styles/categories.js";
 
-export function renderLegendPanel() {
+export async function renderLegendPanel() {
   const panel = document.getElementById("legend-panel");
   panel.innerHTML = "<h3>Legend</h3>";
 
@@ -35,4 +35,25 @@ export function renderLegendPanel() {
   employment.className = "legend-row";
   employment.innerHTML = `<span class="legend-swatch legend-swatch-square employment"></span><span>Employment area</span>`;
   panel.appendChild(employment);
+
+  await renderEnclosedMallsList(panel);
+}
+
+async function renderEnclosedMallsList(panel) {
+  const res = await fetch("/data/enclosed-malls.geojson");
+  const { features } = await res.json();
+
+  const heading = document.createElement("h3");
+  heading.className = "legend-sub-heading";
+  heading.textContent = "Enclosed Malls (GLA)";
+  panel.appendChild(heading);
+
+  const list = document.createElement("ol");
+  list.className = "mall-list";
+  for (const { properties } of [...features].sort((a, b) => a.properties.number - b.properties.number)) {
+    const item = document.createElement("li");
+    item.innerHTML = `${properties.name} <span class="mall-gla">(${Number(properties.gla_sqft).toLocaleString()} sf)</span>`;
+    list.appendChild(item);
+  }
+  panel.appendChild(list);
 }

@@ -33,6 +33,7 @@ export function initMap() {
     addAspPolygonsLayer(map);
     addLrtLayer(map);
     addTrafficLayer(map);
+    addEnclosedMallsLayer(map);
     addPoiLayer(map);
   });
 
@@ -215,6 +216,45 @@ function addTrafficLayer(map) {
   });
 }
 
+function addEnclosedMallsLayer(map) {
+  map.addSource("enclosed-malls", { type: "geojson", data: "/data/enclosed-malls.geojson" });
+
+  map.addLayer({
+    id: "enclosed-malls-circle",
+    type: "circle",
+    source: "enclosed-malls",
+    paint: {
+      "circle-radius": 10,
+      "circle-color": AY_COLORS.midnight,
+      "circle-stroke-color": "#FFFFFF",
+      "circle-stroke-width": 2,
+    },
+  });
+
+  map.addLayer({
+    id: "enclosed-malls-label",
+    type: "symbol",
+    source: "enclosed-malls",
+    layout: {
+      "text-field": ["to-string", ["get", "number"]],
+      "text-size": 11,
+      "text-font": ["Noto Sans Bold"],
+    },
+    paint: { "text-color": "#FFFFFF" },
+  });
+
+  map.on("click", "enclosed-malls-circle", (e) => {
+    const { number, name, gla_sqft } = e.features[0].properties;
+    new maplibregl.Popup()
+      .setLngLat(e.lngLat)
+      .setHTML(`<h4>${number}. ${name}</h4><p>GLA: ${Number(gla_sqft).toLocaleString()} sf</p>`)
+      .addTo(map);
+  });
+
+  map.on("mouseenter", "enclosed-malls-circle", () => (map.getCanvas().style.cursor = "pointer"));
+  map.on("mouseleave", "enclosed-malls-circle", () => (map.getCanvas().style.cursor = ""));
+}
+
 function addPoiLayer(map) {
   map.addSource("retail-pois", { type: "geojson", data: "/data/retail-pois.geojson" });
 
@@ -262,6 +302,7 @@ export const TOGGLEABLE_LAYERS = {
   "toggle-residential": ["residential-areas-fill"],
   "toggle-employment": ["employment-areas-fill"],
   "toggle-lrt": ["lrt-line"],
+  "toggle-malls": ["enclosed-malls-circle", "enclosed-malls-label"],
 };
 
 export function setLayerVisibility(map, layerIds, visible) {
