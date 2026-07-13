@@ -27,6 +27,9 @@ export async function renderPointForm(map, categories) {
           ${icons.map((icon) => `<option value="${icon.id}">${icon.name}</option>`).join("")}
         </select>
       </label>
+      <label>Icon size
+        <input name="iconSize" type="range" min="0.2" max="2" step="0.1" value="0.6" />
+      </label>
       <label>Lat <input name="lat" type="number" step="any" required /></label>
       <label>Lng <input name="lng" type="number" step="any" required /></label>
       <label>Address <input name="address" /></label>
@@ -67,6 +70,7 @@ export async function renderPointForm(map, categories) {
     form.elements.name.value = point.name;
     form.elements.category.value = point.category;
     form.elements.iconId.value = point.icon_id || "";
+    form.elements.iconSize.value = point.icon_size ?? categories[point.category]?.size ?? 0.6;
     form.elements.lat.value = point.lat;
     form.elements.lng.value = point.lng;
     form.elements.address.value = point.address || "";
@@ -80,6 +84,13 @@ export async function renderPointForm(map, categories) {
   };
 
   cancelButton.addEventListener("click", resetToAddMode);
+
+  // When adding a new point (not editing an existing one), default the
+  // size slider to whatever the chosen category's own default is.
+  form.elements.category.addEventListener("change", () => {
+    if (form.elements.id.value) return;
+    form.elements.iconSize.value = categories[form.elements.category.value]?.size ?? 0.6;
+  });
 
   let picking = false;
   const pickButton = panel.querySelector("#pick-on-map");
@@ -106,6 +117,7 @@ export async function renderPointForm(map, categories) {
     data.lat = Number(data.lat);
     data.lng = Number(data.lng);
     data.iconId = data.iconId || null;
+    data.iconSize = Number(data.iconSize);
     data.last_updated = new Date().toISOString().slice(0, 10);
 
     try {

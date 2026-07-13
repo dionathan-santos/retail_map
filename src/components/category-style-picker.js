@@ -26,6 +26,7 @@ export async function renderCategoryStylePicker(map, categories) {
         <option value="">Shape</option>
         ${icons.map((icon) => `<option value="${icon.id}" ${String(style.iconId) === String(icon.id) ? "selected" : ""}>${icon.name}</option>`).join("")}
       </select>
+      <input type="range" min="0.2" max="2" step="0.1" value="${style.size ?? 0.6}" data-key="${key}" data-field="size" title="Icon size" />
     `;
     panel.appendChild(row);
   }
@@ -41,13 +42,24 @@ export async function renderCategoryStylePicker(map, categories) {
       const iconId = e.target.value || null;
       categories[key].iconId = iconId;
       categories[key].iconImage = iconId ? icons.find((icon) => String(icon.id) === iconId)?.image_data : null;
+    } else if (field === "size") {
+      categories[key].size = Number(e.target.value);
     } else {
       categories[key][field] = e.target.value;
     }
 
     const style = categories[key];
-    await saveCategoryStyle(key, { label: style.label, color: style.color, shape: style.shape, iconId: style.iconId || null });
-    await registerCategoryIcons(map, categories);
+    await saveCategoryStyle(key, {
+      label: style.label,
+      color: style.color,
+      shape: style.shape,
+      iconId: style.iconId || null,
+      size: style.size,
+    });
+
+    if (field !== "size") {
+      await registerCategoryIcons(map, categories);
+    }
     await refreshPoints(map);
 
     if (field === "iconId") {

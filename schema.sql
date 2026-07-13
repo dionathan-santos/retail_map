@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS points (
   icon_color TEXT,   -- optional per-point override of the category color
   icon_shape TEXT,   -- optional per-point override of the category shape
   icon_id INTEGER REFERENCES custom_icons(id), -- optional per-point custom icon (overrides the category's icon)
+  icon_size REAL,    -- optional per-point override of the category's icon size
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -26,7 +27,8 @@ CREATE TABLE IF NOT EXISTS category_styles (
   label TEXT,
   color TEXT NOT NULL,
   shape TEXT NOT NULL,
-  icon_id INTEGER REFERENCES custom_icons(id)
+  icon_id INTEGER REFERENCES custom_icons(id),
+  size REAL NOT NULL DEFAULT 0.6 -- MapLibre icon-size multiplier
 );
 
 -- User-uploaded icon images (small PNGs), stored inline as base64 -- no R2

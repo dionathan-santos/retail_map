@@ -2,15 +2,17 @@
 // Young "Edmonton Retail Network" map. Users can override color/shape per
 // category (persisted in D1, see /functions/api/category-styles) or per
 // individual point.
+export const DEFAULT_ICON_SIZE = 0.6;
+
 export const DEFAULT_CATEGORIES = {
-  grocery: { label: "Grocery", color: "#1B7A3D", shape: "circle" },
-  pharmacy: { label: "Pharmacy", color: "#C0392B", shape: "cross" },
-  fitness: { label: "Fitness", color: "#E08E0B", shape: "triangle" },
-  furniture_home: { label: "Furniture / Home", color: "#8E5A2E", shape: "square" },
-  large_format_anchor: { label: "Large Format Anchor", color: "#1F4E79", shape: "diamond" },
-  specialty: { label: "Specialty", color: "#5B3A9B", shape: "star" },
-  enclosed_malls: { label: "Enclosed Malls", color: "#B5590A", shape: "hexagon" },
-  other: { label: "Other", color: "#6B7280", shape: "circle" },
+  grocery: { label: "Grocery", color: "#1B7A3D", shape: "circle", size: DEFAULT_ICON_SIZE },
+  pharmacy: { label: "Pharmacy", color: "#C0392B", shape: "cross", size: DEFAULT_ICON_SIZE },
+  fitness: { label: "Fitness", color: "#E08E0B", shape: "triangle", size: DEFAULT_ICON_SIZE },
+  furniture_home: { label: "Furniture / Home", color: "#8E5A2E", shape: "square", size: DEFAULT_ICON_SIZE },
+  large_format_anchor: { label: "Large Format Anchor", color: "#1F4E79", shape: "diamond", size: DEFAULT_ICON_SIZE },
+  specialty: { label: "Specialty", color: "#5B3A9B", shape: "star", size: DEFAULT_ICON_SIZE },
+  enclosed_malls: { label: "Enclosed Malls", color: "#B5590A", shape: "hexagon", size: DEFAULT_ICON_SIZE },
+  other: { label: "Other", color: "#6B7280", shape: "circle", size: DEFAULT_ICON_SIZE },
 };
 
 export const SHAPES = ["circle", "square", "triangle", "diamond", "star", "hexagon", "cross"];
