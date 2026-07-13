@@ -181,6 +181,7 @@ html, body {
 
 #point-form-panel,
 #bulk-upload-panel,
+#icon-bank-panel,
 #category-style-panel {
   position: static;
   flex-shrink: 0;
@@ -188,6 +189,7 @@ html, body {
 
 #point-form-panel h3,
 #bulk-upload-panel h3,
+#icon-bank-panel h3,
 #category-style-panel h3 {
   margin: 0 0 8px;
   font-size: 13px;
