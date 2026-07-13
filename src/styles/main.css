@@ -81,6 +81,68 @@ html, body {
   cursor: pointer;
 }
 
+#draw-panel {
+  top: 170px;
+  left: 12px;
+  min-width: 200px;
+}
+
+#draw-panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--brand-navy);
+}
+
+.draw-toolbar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.draw-toolbar-buttons button {
+  flex: 1 1 auto;
+  font-size: 12px;
+  padding: 5px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: #F5F7FA;
+  cursor: pointer;
+}
+
+.draw-toolbar-buttons button:hover {
+  background: #EAF1F8;
+}
+
+.style-editor {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.style-editor label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.style-editor input[type="color"] {
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.style-editor input[type="range"] {
+  width: 100px;
+}
+
 #legend-panel {
   bottom: 24px;
   left: 12px;

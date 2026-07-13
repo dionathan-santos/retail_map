@@ -36,3 +36,14 @@ CREATE TABLE IF NOT EXISTS custom_icons (
   image_data TEXT NOT NULL, -- base64-encoded PNG, no "data:image/png;base64," prefix
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- User-drawn/editable polygons (src/draw.js, Terra Draw). geometry and
+-- properties are stored as JSON strings; id matches Terra Draw's own
+-- feature id (a UUID) so create/update/delete map 1:1 with its store.
+CREATE TABLE IF NOT EXISTS shapes (
+  id TEXT PRIMARY KEY,
+  geometry TEXT NOT NULL,
+  properties TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

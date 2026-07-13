@@ -81,3 +81,35 @@ export async function deleteIcon(id) {
   if (!res.ok) throw new Error(`deleteIcon failed: ${res.status}`);
   return res.json();
 }
+
+export async function fetchShapes() {
+  const res = await fetch("/api/shapes");
+  if (!res.ok) throw new Error(`fetchShapes failed: ${res.status}`);
+  return res.json();
+}
+
+export async function createShape(id, geometry, properties) {
+  const res = await fetch("/api/shapes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, geometry, properties }),
+  });
+  if (!res.ok) throw new Error(`createShape failed: ${res.status}`);
+  return res.json();
+}
+
+export async function updateShape(id, geometry, properties) {
+  const res = await fetch(`/api/shapes/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ geometry, properties }),
+  });
+  if (!res.ok) throw new Error(`updateShape failed: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteShapeApi(id) {
+  const res = await fetch(`/api/shapes/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`deleteShapeApi failed: ${res.status}`);
+  return res.json();
+}
