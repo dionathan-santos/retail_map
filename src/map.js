@@ -20,7 +20,7 @@ export async function initMap() {
   map.addControl(new maplibregl.NavigationControl(), "top-right");
 
   map.on("load", async () => {
-    registerCategoryIcons(map, categories);
+    await registerCategoryIcons(map, categories);
     await addPointsLayer(map, categories);
   });
 
@@ -58,15 +58,32 @@ function buildStyle() {
   };
 }
 
-// Draws one sprite image per category color/shape combo and registers it
-// with MapLibre under `icon-<category>`, so the same registered image is
-// used both in the live map and in the exported canvas snapshot.
-export function registerCategoryIcons(map, categories) {
+// Registers one sprite image per category under `icon-<category>`, so the
+// same registered image is used both in the live map and in the exported
+// canvas snapshot. Categories with a custom uploaded icon (style.iconImage,
+// a base64 PNG from the icon bank) use that directly; otherwise a shape is
+// drawn to a canvas as before.
+export async function registerCategoryIcons(map, categories) {
   for (const [key, style] of Object.entries(categories)) {
     const imageId = `icon-${key}`;
     if (map.hasImage(imageId)) map.removeImage(imageId);
-    map.addImage(imageId, drawIcon(style.shape, style.color), { pixelRatio: 2 });
+
+    if (style.iconImage) {
+      const img = await loadImage(`data:image/png;base64,${style.iconImage}`);
+      map.addImage(imageId, img);
+    } else {
+      map.addImage(imageId, drawIcon(style.shape, style.color), { pixelRatio: 2 });
+    }
   }
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`failed to load icon image`));
+    img.src = src;
+  });
 }
 
 export async function addPointsLayer(map, categories) {

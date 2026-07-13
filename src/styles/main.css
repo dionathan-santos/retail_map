@@ -241,3 +241,46 @@ html, body {
 .category-style-row span {
   flex: 1;
 }
+
+.category-style-row select {
+  max-width: 90px;
+}
+
+#icon-bank-list {
+  margin-top: 8px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.icon-bank-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.icon-bank-row img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  background: #FFFFFF;
+}
+
+.icon-bank-row span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-bank-row button {
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: #F5F7FA;
+  cursor: pointer;
+}

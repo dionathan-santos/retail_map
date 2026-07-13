@@ -44,6 +44,16 @@ async function handleApi(request, env, url) {
   if (pathname === "/api/category-styles" && request.method === "POST") {
     return saveCategoryStyle(request, env);
   }
+  if (pathname === "/api/icons" && request.method === "GET") {
+    return listIcons(env);
+  }
+  if (pathname === "/api/icons" && request.method === "POST") {
+    return createIcon(request, env);
+  }
+  const iconIdMatch = pathname.match(/^\/api\/icons\/(\d+)$/);
+  if (iconIdMatch && request.method === "DELETE") {
+    return deleteIcon(Number(iconIdMatch[1]), env);
+  }
 
   return Response.json({ error: "not found" }, { status: 404 });
 }
@@ -150,27 +160,72 @@ function validatePoint(body) {
 // -- category styles -----------------------------------------------------
 
 async function listCategoryStyles(env) {
-  const { results } = await env.DB.prepare("SELECT * FROM category_styles").all();
+  const { results } = await env.DB.prepare(
+    `SELECT cs.category, cs.label, cs.color, cs.shape, cs.icon_id, ci.image_data AS icon_image
+     FROM category_styles cs
+     LEFT JOIN custom_icons ci ON ci.id = cs.icon_id`
+  ).all();
+
   const overrides = {};
   for (const row of results) {
-    overrides[row.category] = { label: row.label, color: row.color, shape: row.shape };
+    overrides[row.category] = {
+      label: row.label,
+      color: row.color,
+      shape: row.shape,
+      iconId: row.icon_id || null,
+      iconImage: row.icon_image || null,
+    };
   }
   return Response.json(overrides);
 }
 
 async function saveCategoryStyle(request, env) {
-  const { category, label, color, shape } = await request.json();
+  const { category, label, color, shape, iconId } = await request.json();
   if (!category || !color || !shape) {
     return Response.json({ error: "category, color and shape are required" }, { status: 400 });
   }
 
   await env.DB.prepare(
-    `INSERT INTO category_styles (category, label, color, shape)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(category) DO UPDATE SET label = excluded.label, color = excluded.color, shape = excluded.shape`
+    `INSERT INTO category_styles (category, label, color, shape, icon_id)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(category) DO UPDATE SET label = excluded.label, color = excluded.color,
+       shape = excluded.shape, icon_id = excluded.icon_id`
   )
-    .bind(category, label || null, color, shape)
+    .bind(category, label || null, color, shape, iconId || null)
     .run();
 
-  return Response.json({ category, label, color, shape });
+  return Response.json({ category, label, color, shape, iconId: iconId || null });
+}
+
+// -- custom icon bank ------------------------------------------------------
+
+async function listIcons(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT id, name, image_data FROM custom_icons ORDER BY created_at DESC"
+  ).all();
+  return Response.json(results);
+}
+
+async function createIcon(request, env) {
+  const { name, imageData } = await request.json();
+  if (!name || !imageData) {
+    return Response.json({ error: "name and imageData are required" }, { status: 400 });
+  }
+  // Base64 PNGs comfortably under D1's ~1MB row/column ceiling; reject
+  // anything larger up front rather than letting the insert fail obscurely.
+  if (imageData.length > 1_500_000) {
+    return Response.json({ error: "icon image is too large (max ~1MB)" }, { status: 400 });
+  }
+
+  const result = await env.DB.prepare("INSERT INTO custom_icons (name, image_data) VALUES (?, ?)")
+    .bind(name, imageData)
+    .run();
+
+  return Response.json({ id: result.meta.last_row_id, name, imageData }, { status: 201 });
+}
+
+async function deleteIcon(id, env) {
+  await env.DB.prepare("UPDATE category_styles SET icon_id = NULL WHERE icon_id = ?").bind(id).run();
+  await env.DB.prepare("DELETE FROM custom_icons WHERE id = ?").bind(id).run();
+  return Response.json({ deleted: id });
 }

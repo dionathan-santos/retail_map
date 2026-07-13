@@ -59,3 +59,25 @@ export async function saveCategoryStyle(category, style) {
   if (!res.ok) throw new Error(`saveCategoryStyle failed: ${res.status}`);
   return res.json();
 }
+
+export async function fetchIcons() {
+  const res = await fetch("/api/icons");
+  if (!res.ok) throw new Error(`fetchIcons failed: ${res.status}`);
+  return res.json();
+}
+
+export async function createIcon(name, imageData) {
+  const res = await fetch("/api/icons", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, imageData }),
+  });
+  if (!res.ok) throw new Error(`createIcon failed: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteIcon(id) {
+  const res = await fetch(`/api/icons/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`deleteIcon failed: ${res.status}`);
+  return res.json();
+}
