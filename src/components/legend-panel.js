@@ -20,4 +20,19 @@ export function renderLegendPanel() {
   zoneSecondary.className = "legend-row";
   zoneSecondary.innerHTML = `<span class="legend-line secondary"></span><span>Secondary retail zone</span>`;
   panel.appendChild(zoneSecondary);
+
+  const lrt = document.createElement("div");
+  lrt.className = "legend-row";
+  lrt.innerHTML = `<span class="legend-line lrt"></span><span>LRT (Current/Future)</span>`;
+  panel.appendChild(lrt);
+
+  const residential = document.createElement("div");
+  residential.className = "legend-row";
+  residential.innerHTML = `<span class="legend-swatch legend-swatch-square residential"></span><span>Residential area</span>`;
+  panel.appendChild(residential);
+
+  const employment = document.createElement("div");
+  employment.className = "legend-row";
+  employment.innerHTML = `<span class="legend-swatch legend-swatch-square employment"></span><span>Employment area</span>`;
+  panel.appendChild(employment);
 }

@@ -27,8 +27,11 @@ export function initMap() {
   map.addControl(new maplibregl.NavigationControl(), "top-right");
 
   map.on("load", () => {
+    addResidentialAreasLayer(map);
+    addEmploymentAreasLayer(map);
     addRetailZonesLayer(map);
     addAspPolygonsLayer(map);
+    addLrtLayer(map);
     addTrafficLayer(map);
     addPoiLayer(map);
   });
@@ -51,6 +54,62 @@ function buildStyle() {
     // "protomaps" schema used by the tiles in PROTOMAPS_URL.
     layers: protomapsLayers("protomaps", PROTOMAPS_THEME, { lang: "en" }),
   };
+}
+
+function addResidentialAreasLayer(map) {
+  map.addSource("residential-areas", { type: "geojson", data: "/data/residential-areas.geojson" });
+
+  map.addLayer({
+    id: "residential-areas-fill",
+    type: "fill",
+    source: "residential-areas",
+    paint: { "fill-color": "#c8c9c4", "fill-opacity": 0.25 },
+  });
+
+  map.on("click", "residential-areas-fill", (e) => {
+    const { area_name } = e.features[0].properties;
+    new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<h4>${area_name}</h4><p>Residential area</p>`).addTo(map);
+  });
+}
+
+function addEmploymentAreasLayer(map) {
+  map.addSource("employment-areas", { type: "geojson", data: "/data/employment-areas.geojson" });
+
+  map.addLayer({
+    id: "employment-areas-fill",
+    type: "fill",
+    source: "employment-areas",
+    paint: { "fill-color": "#7d7370", "fill-opacity": 0.3 },
+  });
+
+  map.on("click", "employment-areas-fill", (e) => {
+    const { area_name } = e.features[0].properties;
+    new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<h4>${area_name}</h4><p>Employment area</p>`).addTo(map);
+  });
+}
+
+function addLrtLayer(map) {
+  map.addSource("lrt-lines", { type: "geojson", data: "/data/lrt-lines.geojson" });
+
+  map.addLayer({
+    id: "lrt-line",
+    type: "line",
+    source: "lrt-lines",
+    layout: { "line-cap": "round" },
+    paint: {
+      "line-color": "#4db595",
+      "line-width": 2.5,
+      "line-dasharray": ["match", ["get", "status"], "future", ["literal", [2, 2]], ["literal", [1, 0]]],
+    },
+  });
+
+  map.on("click", "lrt-line", (e) => {
+    const { line_name, status } = e.features[0].properties;
+    new maplibregl.Popup()
+      .setLngLat(e.lngLat)
+      .setHTML(`<h4>${line_name}</h4><p>LRT — ${status === "future" ? "future" : "current"}</p>`)
+      .addTo(map);
+  });
 }
 
 function addRetailZonesLayer(map) {
@@ -200,6 +259,9 @@ export const TOGGLEABLE_LAYERS = {
   "toggle-zones": ["retail-zones-fill", "retail-zones-line"],
   "toggle-asp": ["asp-polygons-fill", "asp-polygons-line"],
   "toggle-traffic": ["traffic-labels", "traffic-points"],
+  "toggle-residential": ["residential-areas-fill"],
+  "toggle-employment": ["employment-areas-fill"],
+  "toggle-lrt": ["lrt-line"],
 };
 
 export function setLayerVisibility(map, layerIds, visible) {
