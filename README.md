@@ -8,11 +8,13 @@ rationale.
 ## Stack
 
 - **Map renderer:** MapLibre GL JS
-- **Basemap tiles:** Protomaps, served from Cloudflare R2 (placeholder URL in
-  `src/map.js` until the real bucket is provisioned). Basemap styling comes
-  from the official `@protomaps/basemaps` "grayscale" theme (closest match to
-  the source PDF's minimalist line-based look — swap for `WHITE`, `LIGHT`,
-  `DARK`, or `BLACK` in `src/map.js` if a different look is wanted).
+- **Basemap tiles:** currently [OpenFreeMap](https://openfreemap.org)'s hosted
+  `positron` style (free, unlimited, no API key) as a stopgap — see
+  `BASEMAP_STYLE_URL` in `src/map.js`. The intended long-term basemap is a
+  self-hosted Edmonton-only `.pmtiles` extract on Cloudflare R2, styled via
+  `@protomaps/basemaps`' `GRAYSCALE` theme (closest match to the source
+  PDF's minimalist line-based look) — see "Building the basemap PMTiles
+  file" below.
 - **Hosting:** Cloudflare Pages
 - **Print export:** client-side canvas capture + jsPDF (no server rendering)
 
@@ -23,17 +25,19 @@ npm install
 npm run dev
 ```
 
-This serves the app with mock data from `/data/*.geojson`. The basemap tile
-source is a placeholder until a real Protomaps R2 bucket URL is set in
-`src/map.js` — data layers (POIs, zones, ASP polygons, traffic labels) all
-render against the placeholder background.
+This serves the app with mock data from `/data/*.geojson`, rendered over
+OpenFreeMap's hosted `positron` basemap (see `BASEMAP_STYLE_URL` in
+`src/map.js`).
 
-### Building the basemap PMTiles file
+### Building the basemap PMTiles file (self-hosted basemap, not wired up yet)
 
-The basemap needs a `.pmtiles` file built from an OpenStreetMap extract
-(`.osm.pbf`) of the Edmonton region — see `src/map.js`'s `PROTOMAPS_URL`.
-Two ways to build it, depending on whether you can install software
-locally:
+To move off OpenFreeMap onto the self-hosted Edmonton basemap described
+under "Stack" above, you'll need a `.pmtiles` file built from an
+OpenStreetMap extract (`.osm.pbf`) of the Edmonton region, then wire
+`src/map.js` back to a `pmtiles://` vector source styled with
+`@protomaps/basemaps` (both are already listed in `package.json`).
+Two ways to build the `.pmtiles` file, depending on whether you can
+install software locally:
 
 **With Docker installed:**
 
@@ -60,8 +64,8 @@ build on GitHub's servers instead of your machine:
    `pmtiles-output` artifact from the summary page — it contains the
    `.pmtiles` file.
 
-Either way, the resulting `.pmtiles` file still needs to be uploaded to
-the Cloudflare R2 bucket referenced by `PROTOMAPS_URL` in `src/map.js`.
+Either way, the resulting `.pmtiles` file still needs to be uploaded to a
+Cloudflare R2 bucket, and `src/map.js` updated to point at it.
 
 ## Data pipeline
 
@@ -90,15 +94,21 @@ flow proves out.
 ### Digitizing zones & ASP polygons in-app
 
 Instead of editing GeoJSON by hand, retail zones and ASP polygons can be
-drawn directly on the map using the "Desenhar no mapa" panel (top-right):
+drawn directly on the map using the "Draw on Map" panel (top-right):
 pick a layer, draw the polygon, and fill in its attributes (zone
 name/tier, or ASP population/households/income) when prompted.
+
+Click **Edit**, then click a drawn shape, to select it — the "Shape
+Style" section appears with controls for fill colour, fill opacity,
+line colour, and line width. **Apply** writes the override onto that
+one feature; **Reset to Default** clears it back to the layer's default
+style.
 
 Drawn shapes are persisted to a Cloudflare D1 database via
 `functions/api/features/[layerKey].js`, with `localStorage` as a local
 cache/fallback (used automatically if the API is unreachable — e.g.
 offline, or running `npm run dev` without `wrangler pages dev`, since
-Vite's dev server doesn't run Pages Functions). Use "Exportar GeoJSON" any
+Vite's dev server doesn't run Pages Functions). Use "Export GeoJSON" any
 time to download the current shapes as a backup or to seed
 `data/retail-zones.geojson` / `data/asp-polygons.geojson` for the
 non-editable baseline layers.
@@ -118,7 +128,7 @@ One-time setup, done in the Cloudflare dashboard:
    deployment" on the latest one in the Pages dashboard) so the binding
    takes effect.
 
-That's it — the "Desenhar no mapa" panel will start saving to D1
+That's it — the "Draw on Map" panel will start saving to D1
 automatically once the binding exists. No code changes needed for this
 part.
 
@@ -129,7 +139,7 @@ npm run build   # outputs to dist/
 ```
 
 Deploy path is GitHub → Cloudflare Pages (`wrangler.toml`). Connect the repo
-in the Cloudflare Pages dashboard for auto-deploy on push to `main`.
+in the Cloudflare Pages dashboard for auto-deploy on push to `master`.
 
 ## Layers
 

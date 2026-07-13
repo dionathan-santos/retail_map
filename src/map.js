@@ -74,19 +74,28 @@ function addEmploymentAreasLayer(map) {
 function addLrtLayer(map) {
   map.addSource("lrt-lines", { type: "geojson", data: "/data/lrt-lines.geojson" });
 
+  // line-dasharray can't be a data-driven (["get", ...]) expression in
+  // MapLibre — it only accepts static or zoom expressions — so current vs.
+  // future needs two filtered layers instead of one with a "match" dasharray.
   map.addLayer({
-    id: "lrt-line",
+    id: "lrt-line-current",
     type: "line",
     source: "lrt-lines",
+    filter: ["==", ["get", "status"], "current"],
     layout: { "line-cap": "round" },
-    paint: {
-      "line-color": "#4db595",
-      "line-width": 2.5,
-      "line-dasharray": ["match", ["get", "status"], "future", ["literal", [2, 2]], ["literal", [1, 0]]],
-    },
+    paint: { "line-color": "#4db595", "line-width": 2.5 },
   });
 
-  map.on("click", "lrt-line", (e) => {
+  map.addLayer({
+    id: "lrt-line-future",
+    type: "line",
+    source: "lrt-lines",
+    filter: ["==", ["get", "status"], "future"],
+    layout: { "line-cap": "round" },
+    paint: { "line-color": "#4db595", "line-width": 2.5, "line-dasharray": [2, 2] },
+  });
+
+  map.on("click", ["lrt-line-current", "lrt-line-future"], (e) => {
     const { line_name, status } = e.features[0].properties;
     new maplibregl.Popup()
       .setLngLat(e.lngLat)
@@ -105,14 +114,25 @@ function addRetailZonesLayer(map) {
     paint: { "fill-color": ZONE_TIER_STYLE.major.color, "fill-opacity": 0.05 },
   });
 
+  // Split by tier (rather than one layer with a data-driven dasharray)
+  // because line-dasharray can't be a ["get", ...] expression in MapLibre.
   map.addLayer({
-    id: "retail-zones-line",
+    id: "retail-zones-line-major",
     type: "line",
     source: "retail-zones",
+    filter: ["==", ["get", "tier"], "major"],
+    paint: { "line-color": ZONE_TIER_STYLE.major.color, "line-width": ZONE_TIER_STYLE.major.width },
+  });
+
+  map.addLayer({
+    id: "retail-zones-line-secondary",
+    type: "line",
+    source: "retail-zones",
+    filter: ["==", ["get", "tier"], "secondary"],
     paint: {
-      "line-color": ZONE_TIER_STYLE.major.color,
-      "line-width": ["match", ["get", "tier"], "major", ZONE_TIER_STYLE.major.width, ZONE_TIER_STYLE.secondary.width],
-      "line-dasharray": ["match", ["get", "tier"], "secondary", ["literal", ZONE_TIER_STYLE.secondary.dash], ["literal", [1, 0]]],
+      "line-color": ZONE_TIER_STYLE.secondary.color,
+      "line-width": ZONE_TIER_STYLE.secondary.width,
+      "line-dasharray": ZONE_TIER_STYLE.secondary.dash,
     },
   });
 
@@ -278,12 +298,12 @@ function addPoiLayer(map) {
 // checkbox id to the MapLibre layer ids it controls.
 export const TOGGLEABLE_LAYERS = {
   "toggle-pois": ["retail-pois-circle"],
-  "toggle-zones": ["retail-zones-fill", "retail-zones-line"],
+  "toggle-zones": ["retail-zones-fill", "retail-zones-line-major", "retail-zones-line-secondary"],
   "toggle-asp": ["asp-polygons-fill", "asp-polygons-line"],
   "toggle-traffic": ["traffic-labels", "traffic-points"],
   "toggle-residential": ["residential-areas-fill"],
   "toggle-employment": ["employment-areas-fill"],
-  "toggle-lrt": ["lrt-line"],
+  "toggle-lrt": ["lrt-line-current", "lrt-line-future"],
   "toggle-malls": ["enclosed-malls-circle", "enclosed-malls-label"],
 };
 

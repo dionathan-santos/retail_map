@@ -1,5 +1,6 @@
 import { TerraDraw, TerraDrawPolygonMode, TerraDrawSelectMode } from "terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
+import { AY_COLORS } from "../styles/brand-colors.js";
 
 // Persisted to Cloudflare D1 via functions/api/features/[layerKey].js, with
 // localStorage as a local cache/fallback — useful offline, and during local
@@ -10,16 +11,38 @@ const STORAGE_KEY_PREFIX = "retail-map:draw:";
 // schema already used in data/retail-zones.geojson and data/asp-polygons.geojson.
 const ATTRIBUTE_PROMPTS = {
   "retail-zones": [
-    { key: "zone_name", label: "Nome da zona", type: "string" },
-    { key: "tier", label: "Tipo (major ou secondary)", type: "string", default: "secondary" },
+    { key: "zone_name", label: "Zone name", type: "string" },
+    { key: "tier", label: "Type (major or secondary)", type: "string", default: "secondary" },
   ],
   "asp-polygons": [
-    { key: "asp_name", label: "Nome do ASP", type: "string" },
-    { key: "population", label: "População", type: "number" },
-    { key: "households", label: "Domicílios", type: "number" },
-    { key: "avg_household_income", label: "Renda média domiciliar", type: "number" },
+    { key: "asp_name", label: "ASP name", type: "string" },
+    { key: "population", label: "Population", type: "number" },
+    { key: "households", label: "Households", type: "number" },
+    { key: "avg_household_income", label: "Average household income", type: "number" },
   ],
 };
+
+// Default shape style per layer, used until a feature carries its own
+// style_* properties (set via the "Shape Style" panel in draw-toolbar.js).
+const DEFAULT_STYLE = {
+  "retail-zones": { fillColor: AY_COLORS.amethyst, fillOpacity: 0.15, lineColor: AY_COLORS.amethyst, lineWidth: 3 },
+  "asp-polygons": { fillColor: AY_COLORS.periwinkle, fillOpacity: 0.35, lineColor: AY_COLORS.midnight, lineWidth: 1 },
+};
+
+function defaultStyleFor(layerKey) {
+  return DEFAULT_STYLE[layerKey] || DEFAULT_STYLE["retail-zones"];
+}
+
+// Reads per-feature style_* properties with a fallback to the active
+// layer's default — shared by both the polygon (drawing) and select
+// (editing) mode styling functions so a shape looks the same in both.
+function styleReader(getActiveLayerKey, styleKey, defaultKey) {
+  return (feature) => {
+    const value = feature.properties?.[styleKey];
+    if (value !== undefined && value !== null && value !== "") return value;
+    return defaultStyleFor(getActiveLayerKey())[defaultKey];
+  };
+}
 
 function storageKey(layerKey) {
   return `${STORAGE_KEY_PREFIX}${layerKey}`;
@@ -98,13 +121,34 @@ function downloadGeoJson(layerKey, features) {
  * canvas, and loads the other layer's saved shapes.
  */
 export function createDrawTool(map) {
+  let activeLayerKey = null;
+  const getActiveLayerKey = () => activeLayerKey;
+
+  const fillColor = styleReader(getActiveLayerKey, "style_fill_color", "fillColor");
+  const fillOpacity = styleReader(getActiveLayerKey, "style_fill_opacity", "fillOpacity");
+  const lineColor = styleReader(getActiveLayerKey, "style_line_color", "lineColor");
+  const lineWidth = styleReader(getActiveLayerKey, "style_line_width", "lineWidth");
+
   const draw = new TerraDraw({
     adapter: new TerraDrawMapLibreGLAdapter({ map }),
     modes: [
-      new TerraDrawPolygonMode(),
+      // Governs idle ("static") rendering of committed polygons — this is
+      // what a shape looks like most of the time, selected or not.
+      new TerraDrawPolygonMode({
+        styles: { fillColor, fillOpacity, outlineColor: lineColor, outlineWidth: lineWidth },
+      }),
+      // Governs the appearance of the one feature currently selected for
+      // editing — mapped to the same style_* properties so it doesn't
+      // flash to a different look on select.
       new TerraDrawSelectMode({
         flags: {
           polygon: { feature: { draggable: true, coordinates: { midpoints: true, draggable: true, deletable: true } } },
+        },
+        styles: {
+          selectedPolygonColor: fillColor,
+          selectedPolygonFillOpacity: fillOpacity,
+          selectedPolygonOutlineColor: lineColor,
+          selectedPolygonOutlineWidth: lineWidth,
         },
       }),
     ],
@@ -113,7 +157,25 @@ export function createDrawTool(map) {
   draw.start();
   draw.setMode("static");
 
-  let activeLayerKey = null;
+  let selectedFeatureId = null;
+  let selectionListeners = [];
+
+  function notifySelectionChange() {
+    const feature = selectedFeatureId
+      ? draw.getSnapshot().find((f) => f.id === selectedFeatureId) || null
+      : null;
+    for (const listener of selectionListeners) listener(feature);
+  }
+
+  draw.on("select", (id) => {
+    selectedFeatureId = id;
+    notifySelectionChange();
+  });
+
+  draw.on("deselect", () => {
+    selectedFeatureId = null;
+    notifySelectionChange();
+  });
 
   function persistActiveLayer() {
     if (!activeLayerKey) return;
@@ -126,7 +188,10 @@ export function createDrawTool(map) {
     draw.setMode("static");
   });
 
-  draw.on("change", persistActiveLayer);
+  draw.on("change", () => {
+    persistActiveLayer();
+    notifySelectionChange();
+  });
 
   async function setActiveLayer(layerKey) {
     if (layerKey === activeLayerKey) return;
@@ -148,5 +213,24 @@ export function createDrawTool(map) {
       if (activeLayerKey) clearFeatures(activeLayerKey);
     },
     exportGeoJson: () => downloadGeoJson(activeLayerKey, draw.getSnapshot()),
+    onSelectionChange: (listener) => selectionListeners.push(listener),
+    getDefaultStyle: () => defaultStyleFor(activeLayerKey),
+    updateSelectedStyle: (styleProps) => {
+      if (!selectedFeatureId) return;
+      draw.updateFeatureProperties(selectedFeatureId, styleProps);
+      persistActiveLayer();
+      notifySelectionChange();
+    },
+    resetSelectedStyle: () => {
+      if (!selectedFeatureId) return;
+      draw.updateFeatureProperties(selectedFeatureId, {
+        style_fill_color: "",
+        style_fill_opacity: "",
+        style_line_color: "",
+        style_line_width: "",
+      });
+      persistActiveLayer();
+      notifySelectionChange();
+    },
   };
 }
