@@ -74,7 +74,12 @@ async function handleApi(request, env, url) {
 // -- points ------------------------------------------------------------
 
 async function listPoints(env) {
-  const { results } = await env.DB.prepare("SELECT * FROM points ORDER BY id DESC").all();
+  const { results } = await env.DB.prepare(
+    `SELECT p.*, ci.image_data AS icon_image
+     FROM points p
+     LEFT JOIN custom_icons ci ON ci.id = p.icon_id
+     ORDER BY p.id DESC`
+  ).all();
   return Response.json(results);
 }
 
@@ -131,7 +136,7 @@ async function updatePoint(id, request, env) {
 
   await env.DB.prepare(
     `UPDATE points SET name = ?, category = ?, lat = ?, lng = ?, address = ?, status = ?, source = ?,
-       last_updated = ?, icon_color = ?, icon_shape = ? WHERE id = ?`
+       last_updated = ?, icon_color = ?, icon_shape = ?, icon_id = ? WHERE id = ?`
   )
     .bind(...pointBindings(point), id)
     .run();
@@ -141,8 +146,8 @@ async function updatePoint(id, request, env) {
 
 function insertPointStmt(env) {
   return env.DB.prepare(
-    `INSERT INTO points (name, category, lat, lng, address, status, source, last_updated, icon_color, icon_shape)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO points (name, category, lat, lng, address, status, source, last_updated, icon_color, icon_shape, icon_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 }
 
@@ -158,6 +163,7 @@ function pointBindings(p) {
     p.last_updated || null,
     p.icon_color || null,
     p.icon_shape || null,
+    p.iconId || null,
   ];
 }
 

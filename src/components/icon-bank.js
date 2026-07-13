@@ -1,5 +1,6 @@
 import { fetchIcons, createIcon, deleteIcon } from "../api.js";
 import { renderCategoryStylePicker } from "./category-style-picker.js";
+import { renderPointForm } from "./point-form.js";
 
 // Upload PNG icons once here, then assign them to categories in the
 // "Category Icons" panel (replacing the drawn shape/color for that
@@ -45,6 +46,7 @@ async function refresh(panel, map, categories) {
       await createIcon(name, base64);
       await refresh(panel, map, categories);
       await renderCategoryStylePicker(map, categories);
+      await renderPointForm(map, categories);
     } catch (err) {
       status.textContent = `Error: ${err.message}`;
     } finally {
@@ -57,6 +59,7 @@ async function refresh(panel, map, categories) {
       await deleteIcon(button.dataset.id);
       await refresh(panel, map, categories);
       await renderCategoryStylePicker(map, categories);
+      await renderPointForm(map, categories);
     });
   });
 }

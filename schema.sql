@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS points (
   last_updated TEXT,
   icon_color TEXT,   -- optional per-point override of the category color
   icon_shape TEXT,   -- optional per-point override of the category shape
+  icon_id INTEGER REFERENCES custom_icons(id), -- optional per-point custom icon (overrides the category's icon)
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
