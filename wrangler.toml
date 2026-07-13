@@ -16,4 +16,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "retail-map-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "a8e289c2-31cf-484a-8430-27fad42d2a2b"
