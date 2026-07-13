@@ -17,11 +17,15 @@ const EXPORT_DPI = 150;
  * "Export Area as Image" button, swapping PNG output for a paginated PDF
  * sized for A0/A1 plotting.
  */
+// Legend is disabled for now (map-only export requested) -- set this back
+// to true, and mapAreaWidthPt below back to `width * 0.82`, to bring it back.
+const INCLUDE_LEGEND = false;
+
 export async function exportMapToPdf(map, { size = "A1" } = {}) {
   const { width, height } = PAGE_SIZES[size];
   const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: [height, width] });
 
-  const mapAreaWidthPt = width * 0.82;
+  const mapAreaWidthPt = INCLUDE_LEGEND ? width * 0.82 : width;
   const pxWidth = Math.round((mapAreaWidthPt / 72) * EXPORT_DPI);
   const pxHeight = Math.round((height / 72) * EXPORT_DPI);
 
@@ -31,7 +35,9 @@ export async function exportMapToPdf(map, { size = "A1" } = {}) {
   // so this never stretches the captured image.
   pdf.addImage(imageData, "PNG", 0, 0, mapAreaWidthPt, height);
 
-  drawLegend(pdf, mapAreaWidthPt, 0, width - mapAreaWidthPt, height, map.categories);
+  if (INCLUDE_LEGEND) {
+    drawLegend(pdf, mapAreaWidthPt, 0, width - mapAreaWidthPt, height, map.categories);
+  }
 
   pdf.save(`edmonton-retail-map-${size}.pdf`);
 }
