@@ -1,22 +1,21 @@
 import maplibregl from "maplibre-gl";
-import { Protocol } from "pmtiles";
-import { layers as protomapsLayers, GRAYSCALE as PROTOMAPS_THEME } from "@protomaps/basemaps";
 import { CATEGORIES, categoryColor, ZONE_TIER_STYLE } from "./styles/categories.js";
 import { AY_COLORS } from "./styles/brand-colors.js";
 
-// Placeholder — swap for the real Cloudflare R2 bucket URL once provisioned.
-// e.g. "https://retail-map-tiles.<account>.r2.dev/edmonton.pmtiles"
-const PROTOMAPS_URL = "pmtiles://https://placeholder-r2-bucket.example.com/edmonton.pmtiles";
+// OpenFreeMap's hosted "positron" style — free, unlimited, no API key,
+// no signup. Used as a stand-in until the Edmonton-only .pmtiles extract
+// is built and uploaded to our own Cloudflare R2 bucket (see
+// .github/workflows/build-pmtiles.yml + README "Building the basemap
+// PMTiles file"), at which point swap this back to a self-hosted
+// pmtiles:// source styled with @protomaps/basemaps' GRAYSCALE theme.
+const BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 
 const EDMONTON_CENTER = [-113.4909, 53.5461];
 
 export function initMap() {
-  const protocol = new Protocol();
-  maplibregl.addProtocol("pmtiles", protocol.tile);
-
   const map = new maplibregl.Map({
     container: "map",
-    style: buildStyle(),
+    style: BASEMAP_STYLE_URL,
     center: EDMONTON_CENTER,
     zoom: 11,
     minZoom: 8,
@@ -38,23 +37,6 @@ export function initMap() {
   });
 
   return map;
-}
-
-function buildStyle() {
-  return {
-    version: 8,
-    glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
-    sources: {
-      protomaps: {
-        type: "vector",
-        url: PROTOMAPS_URL,
-        attribution: "&copy; Protomaps &copy; OpenStreetMap contributors",
-      },
-    },
-    // Official Protomaps "light" basemap theme, keyed off the same
-    // "protomaps" schema used by the tiles in PROTOMAPS_URL.
-    layers: protomapsLayers("protomaps", PROTOMAPS_THEME, { lang: "en" }),
-  };
 }
 
 function addResidentialAreasLayer(map) {
