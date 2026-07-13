@@ -1,6 +1,6 @@
-// Thin client for the Cloudflare Pages Functions API backed by D1.
-// Single-point-add and bulk upload both go through the same endpoints, so
-// both flows write the same schema (see functions/api/points.js).
+// Thin client for the Worker's /api/* routes (worker/index.js), backed by
+// D1. Single-point-add and bulk upload both go through the same endpoints,
+// so both flows write the same schema.
 
 export async function fetchPoints() {
   const res = await fetch("/api/points");
@@ -25,6 +25,16 @@ export async function createPointsBulk(points) {
     body: JSON.stringify({ points }),
   });
   if (!res.ok) throw new Error(`createPointsBulk failed: ${res.status}`);
+  return res.json();
+}
+
+export async function updatePoint(id, point) {
+  const res = await fetch(`/api/points/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(point),
+  });
+  if (!res.ok) throw new Error(`updatePoint failed: ${res.status}`);
   return res.json();
 }
 

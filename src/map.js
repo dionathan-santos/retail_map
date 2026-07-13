@@ -1,7 +1,7 @@
 import maplibregl from "maplibre-gl";
 import basemapConfig from "./basemap-config.json";
 import { mergeCategories, categoryStyle, drawIcon } from "./styles/categories.js";
-import { fetchCategoryStyles, fetchPoints } from "./api.js";
+import { fetchCategoryStyles, fetchPoints, deletePoint } from "./api.js";
 
 export async function initMap() {
   const overrides = await fetchCategoryStyles();
@@ -97,15 +97,31 @@ export async function addPointsLayer(map, categories) {
   map.on("click", "retail-points-symbol", (e) => {
     const p = e.features[0].properties;
     const style = categoryStyle(categories, p.category);
-    new maplibregl.Popup()
+    const popup = new maplibregl.Popup()
       .setLngLat(e.lngLat)
       .setHTML(
         `<h4>${p.name}</h4>` +
         `<p>${style.label}${p.status === "closed" ? " — CLOSED" : ""}<br>` +
         `${p.address || ""}<br>` +
-        `<small>${p.last_updated || ""} · ${p.source || ""}</small></p>`
+        `<small>${p.last_updated || ""} · ${p.source || ""}</small></p>` +
+        `<div class="popup-actions">` +
+        `<button class="popup-edit">Edit</button>` +
+        `<button class="popup-delete">Delete</button>` +
+        `</div>`
       )
       .addTo(map);
+
+    const el = popup.getElement();
+    el.querySelector(".popup-edit").addEventListener("click", () => {
+      map.startEditingPoint(p);
+      popup.remove();
+    });
+    el.querySelector(".popup-delete").addEventListener("click", async () => {
+      if (!confirm(`Delete "${p.name}"?`)) return;
+      await deletePoint(p.id);
+      await refreshPoints(map);
+      popup.remove();
+    });
   });
 
   map.on("mouseenter", "retail-points-symbol", () => (map.getCanvas().style.cursor = "pointer"));
