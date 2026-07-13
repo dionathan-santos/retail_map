@@ -12,6 +12,8 @@
   "dependencies": {
     "jspdf": "^2.5.2",
     "maplibre-gl": "^4.7.1",
+    "terra-draw": "^1.32.0",
+    "terra-draw-maplibre-gl-adapter": "^1.4.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
