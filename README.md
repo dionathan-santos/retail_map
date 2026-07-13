@@ -12,13 +12,10 @@ described there with a static georeferenced base map + user-added points.
 - **Basemap:** the Avison Young base map (`assets/source/Retail map_no
   icons.pdf`), rendered once to a high-res PNG and georeferenced with the
   existing affine transform, then loaded as a MapLibre raster/image source.
-- **Hosting:** Cloudflare Workers (with static assets) — the dashboard's
-  "Create a Worker" + Git integration flow, which is what Cloudflare's
-  unified Workers & Pages UI offers now (classic standalone Pages projects
-  aren't offered as a separate creation flow anymore).
-- **Data:** Cloudflare D1 (SQL), accessed through the Worker's own fetch
-  handler (`worker/index.js`) — single-point-add and bulk-upload both
-  write to the same `points` table.
+- **Hosting:** Cloudflare Pages
+- **Data:** Cloudflare D1 (SQL), accessed through Cloudflare Pages Functions
+  (`/functions/api/*`) — single-point-add and bulk-upload both write to the
+  same `points` table.
 - **Print export:** client-side canvas capture + jsPDF (no server rendering)
 
 ## Local development
@@ -31,8 +28,7 @@ npm run dev
 The dev server needs the D1 API routes to work locally too:
 
 ```bash
-npm run build
-npx wrangler dev
+npx wrangler pages dev -- npm run dev
 ```
 
 ## One-time setup
@@ -52,7 +48,7 @@ python3 scripts/render-basemap.py
 ```bash
 npx wrangler d1 create retail-map-db
 # paste the returned database_id into wrangler.toml
-npx wrangler d1 execute retail-map-db --remote --file=schema.sql
+npx wrangler d1 execute retail-map-db --file=schema.sql
 ```
 
 ## Data pipeline (bulk points)
@@ -72,7 +68,7 @@ pip install -r scripts/requirements.txt
 python scripts/geocode.py data-sources/grocery.xlsx
 
 # push straight into the deployed D1 database
-python scripts/excel-to-geojson.py data-sources/grocery.xlsx --api-url https://retailmap.<your-subdomain>.workers.dev
+python scripts/excel-to-geojson.py data-sources/grocery.xlsx --api-url https://retail-map.pages.dev
 ```
 
 ## Icon customization
@@ -89,13 +85,9 @@ picked up by both the interactive map and the print export.
 npm run build   # outputs to dist/
 ```
 
-Deploy path is GitHub → Cloudflare Workers, via "Create a Worker" → connect
-to this repo in the Cloudflare dashboard, with:
-- Build command: `npm run build`
-- Deploy command: `npx wrangler deploy`
-- Production branch: `master`
-- A D1 binding (`DB` → `retail-map-db`) added under the Worker's
-  Settings → Bindings.
+Deploy path is GitHub → Cloudflare Pages (`wrangler.toml`, with the D1
+binding). Connect the repo in the Cloudflare Pages dashboard for
+auto-deploy on push to `master`.
 
 ## Layers
 
