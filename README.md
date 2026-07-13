@@ -142,6 +142,7 @@ in the Cloudflare Pages dashboard for auto-deploy on push to `main`.
 | Residential areas | `data/residential-areas.geojson` | `#toggle-residential` |
 | Employment areas | `data/employment-areas.geojson` | `#toggle-employment` |
 | LRT (current/future) | `data/lrt-lines.geojson` | `#toggle-lrt` |
+| Enclosed malls (numbered, GLA) | `data/enclosed-malls.geojson` | `#toggle-malls` |
 
 ## Print export
 

@@ -137,7 +137,34 @@ html, body {
 #legend-panel {
   bottom: 24px;
   left: 12px;
-  max-width: 220px;
+  max-width: 240px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.legend-sub-heading {
+  margin: 10px 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--brand-navy);
+  border-top: 1px solid var(--panel-border);
+  padding-top: 8px;
+}
+
+.mall-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+}
+
+.mall-list li {
+  padding: 2px 0;
+}
+
+.mall-gla {
+  color: var(--ay-stone-grey, #7d7370);
+  font-size: 11px;
 }
 
 #legend-panel h3 {

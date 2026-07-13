@@ -8,6 +8,7 @@ const LAYER_LABELS = {
   "toggle-residential": "Residential Areas",
   "toggle-employment": "Employment Areas",
   "toggle-lrt": "LRT (Current/Future)",
+  "toggle-malls": "Enclosed Malls",
 };
 
 export function renderLayerTogglePanel(map) {
