@@ -35,6 +35,9 @@ async function handleApi(request, env, url) {
   if (pointIdMatch && request.method === "DELETE") {
     return deletePoint(Number(pointIdMatch[1]), env);
   }
+  if (pointIdMatch && request.method === "PUT") {
+    return updatePoint(Number(pointIdMatch[1]), request, env);
+  }
   if (pathname === "/api/category-styles" && request.method === "GET") {
     return listCategoryStyles(env);
   }
@@ -94,6 +97,23 @@ async function createPointsBulk(request, env) {
 async function deletePoint(id, env) {
   await env.DB.prepare("DELETE FROM points WHERE id = ?").bind(id).run();
   return Response.json({ deleted: id });
+}
+
+async function updatePoint(id, request, env) {
+  const body = await request.json();
+  const point = validatePoint(body);
+  if (point.error) {
+    return Response.json({ error: point.error }, { status: 400 });
+  }
+
+  await env.DB.prepare(
+    `UPDATE points SET name = ?, category = ?, lat = ?, lng = ?, address = ?, status = ?, source = ?,
+       last_updated = ?, icon_color = ?, icon_shape = ? WHERE id = ?`
+  )
+    .bind(...pointBindings(point), id)
+    .run();
+
+  return Response.json({ id, ...point });
 }
 
 function insertPointStmt(env) {

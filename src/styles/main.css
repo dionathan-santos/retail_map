@@ -132,6 +132,40 @@ html, body {
   color: var(--brand-navy);
 }
 
+.popup-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.popup-actions button {
+  flex: 1;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: #F5F7FA;
+  cursor: pointer;
+}
+
+.popup-actions button:hover {
+  background: #EAF1F8;
+}
+
+.popup-actions .popup-delete:hover {
+  background: #FBEAEA;
+  border-color: #C0392B;
+}
+
+.point-form-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.point-form-buttons button {
+  flex: 1;
+}
+
 #right-rail {
   position: absolute;
   z-index: 10;
