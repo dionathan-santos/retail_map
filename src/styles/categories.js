@@ -1,13 +1,15 @@
-// Retail category palette — inspired by the source Avison Young PDF's pin
-// hierarchy, tuned to sit alongside CM Land Tracker's existing brand colors.
+import { AY_COLORS } from "./brand-colors.js";
+
+// Retail category palette — Avison Young brand colors, assigned so
+// adjacent categories on the map read as distinct at a glance.
 export const CATEGORIES = {
-  grocery: { label: "Grocery", color: "#1B7A3D" },
-  pharmacy: { label: "Pharmacy", color: "#C0392B" },
-  fitness: { label: "Fitness", color: "#E08E0B" },
-  specialty: { label: "Specialty Retail", color: "#5B3A9B" },
-  restaurant: { label: "Restaurant / QSR", color: "#B5590A" },
-  bank: { label: "Bank / Financial", color: "#1F4E79" },
-  other: { label: "Other", color: "#6B7280" },
+  grocery: { label: "Grocery", color: AY_COLORS.mint },
+  pharmacy: { label: "Pharmacy", color: AY_COLORS.orange },
+  fitness: { label: "Fitness", color: AY_COLORS.periwinkle },
+  specialty: { label: "Specialty Retail", color: AY_COLORS.amethyst },
+  restaurant: { label: "Restaurant / QSR", color: AY_COLORS.mauve },
+  bank: { label: "Bank / Financial", color: AY_COLORS.midnight },
+  other: { label: "Other", color: AY_COLORS.stoneGrey },
 };
 
 export function categoryColor(category) {
@@ -15,6 +17,6 @@ export function categoryColor(category) {
 }
 
 export const ZONE_TIER_STYLE = {
-  major: { color: "#1F4E79", width: 3, dash: [1, 0] },
-  secondary: { color: "#1F4E79", width: 1.5, dash: [2, 2] },
+  major: { color: AY_COLORS.amethyst, width: 3, dash: [1, 0] },
+  secondary: { color: AY_COLORS.mauve, width: 1.5, dash: [2, 2] },
 };

@@ -2,6 +2,7 @@ import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import { layers as protomapsLayers, GRAYSCALE as PROTOMAPS_THEME } from "@protomaps/basemaps";
 import { CATEGORIES, categoryColor, ZONE_TIER_STYLE } from "./styles/categories.js";
+import { AY_COLORS } from "./styles/brand-colors.js";
 
 // Placeholder — swap for the real Cloudflare R2 bucket URL once provisioned.
 // e.g. "https://retail-map-tiles.<account>.r2.dev/edmonton.pmtiles"
@@ -92,9 +93,9 @@ function addAspPolygonsLayer(map) {
     paint: {
       "fill-color": [
         "interpolate", ["linear"], ["get", "population"],
-        0, "#EAF1F8",
-        20000, "#7FA8CE",
-        40000, "#1F4E79",
+        0, AY_COLORS.champagne,
+        20000, AY_COLORS.periwinkle,
+        40000, AY_COLORS.midnight,
       ],
       "fill-opacity": 0.35,
     },
@@ -104,7 +105,7 @@ function addAspPolygonsLayer(map) {
     id: "asp-polygons-line",
     type: "line",
     source: "asp-polygons",
-    paint: { "line-color": "#1F4E79", "line-width": 1, "line-opacity": 0.6 },
+    paint: { "line-color": AY_COLORS.midnight, "line-width": 1, "line-opacity": 0.6 },
   });
 
   map.on("click", "asp-polygons-fill", (e) => {
@@ -136,7 +137,7 @@ function addTrafficLayer(map) {
       "text-anchor": "top",
     },
     paint: {
-      "text-color": "#7A1F1F",
+      "text-color": AY_COLORS.orange,
       "text-halo-color": "#FFFFFF",
       "text-halo-width": 1.5,
     },
@@ -148,7 +149,7 @@ function addTrafficLayer(map) {
     source: "traffic-counts",
     paint: {
       "circle-radius": 4,
-      "circle-color": "#7A1F1F",
+      "circle-color": AY_COLORS.orange,
       "circle-stroke-color": "#FFFFFF",
       "circle-stroke-width": 1,
     },
