@@ -25,18 +25,27 @@ export async function exportMapToPdf(map, { size = "A1" } = {}) {
   const { width, height } = PAGE_SIZES[size];
   const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: [height, width] });
 
-  const mapAreaWidthPt = INCLUDE_LEGEND ? width * 0.82 : width;
+  // jsPDF's actual rendered page width/height don't necessarily match our
+  // local `width`/`height` vars -- with this orientation+format combo it
+  // swaps them (pageSize.getWidth() here is our `height` value, not
+  // `width`). Read the real values back instead of assuming, or the map
+  // image ends up sized for the wrong axis (was leaving a gap on one edge
+  // and getting clipped on the other).
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  const mapAreaWidthPt = INCLUDE_LEGEND ? pageWidth * 0.82 : pageWidth;
   const pxWidth = Math.round((mapAreaWidthPt / 72) * EXPORT_DPI);
-  const pxHeight = Math.round((height / 72) * EXPORT_DPI);
+  const pxHeight = Math.round((pageHeight / 72) * EXPORT_DPI);
 
   const imageData = await captureAtResolution(map, pxWidth, pxHeight);
 
-  // pxWidth/pxHeight share the exact aspect ratio of mapAreaWidthPt/height,
+  // pxWidth/pxHeight share the exact aspect ratio of mapAreaWidthPt/pageHeight,
   // so this never stretches the captured image.
-  pdf.addImage(imageData, "PNG", 0, 0, mapAreaWidthPt, height);
+  pdf.addImage(imageData, "PNG", 0, 0, mapAreaWidthPt, pageHeight);
 
   if (INCLUDE_LEGEND) {
-    drawLegend(pdf, mapAreaWidthPt, 0, width - mapAreaWidthPt, height, map.categories);
+    drawLegend(pdf, mapAreaWidthPt, 0, pageWidth - mapAreaWidthPt, pageHeight, map.categories);
   }
 
   pdf.save(`edmonton-retail-map-${size}.pdf`);
