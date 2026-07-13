@@ -62,6 +62,10 @@ file with columns `name, category, lat, lng, address, status, source,
 last_updated` (same convention as CM Land Tracker) and it's parsed
 client-side and posted to `/api/points/bulk`.
 
+Start from [`templates/points-bulk-upload-template.xlsx`](templates/points-bulk-upload-template.xlsx)
+-- it has the correct headers, a category/status dropdown on each row, 3
+sample rows to replace, and a "Read Me" sheet with instructions.
+
 For scripted/CLI imports, `scripts/excel-to-geojson.py` can push the same
 rows straight into a deployed instance:
 

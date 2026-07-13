@@ -136,7 +136,7 @@ async function updatePoint(id, request, env) {
 
   await env.DB.prepare(
     `UPDATE points SET name = ?, category = ?, lat = ?, lng = ?, address = ?, status = ?, source = ?,
-       last_updated = ?, icon_color = ?, icon_shape = ?, icon_id = ? WHERE id = ?`
+       last_updated = ?, icon_color = ?, icon_shape = ?, icon_id = ?, icon_size = ? WHERE id = ?`
   )
     .bind(...pointBindings(point), id)
     .run();
@@ -146,8 +146,8 @@ async function updatePoint(id, request, env) {
 
 function insertPointStmt(env) {
   return env.DB.prepare(
-    `INSERT INTO points (name, category, lat, lng, address, status, source, last_updated, icon_color, icon_shape, icon_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO points (name, category, lat, lng, address, status, source, last_updated, icon_color, icon_shape, icon_id, icon_size)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 }
 
@@ -164,6 +164,7 @@ function pointBindings(p) {
     p.icon_color || null,
     p.icon_shape || null,
     p.iconId || null,
+    p.iconSize || null,
   ];
 }
 
@@ -180,7 +181,7 @@ function validatePoint(body) {
 
 async function listCategoryStyles(env) {
   const { results } = await env.DB.prepare(
-    `SELECT cs.category, cs.label, cs.color, cs.shape, cs.icon_id, ci.image_data AS icon_image
+    `SELECT cs.category, cs.label, cs.color, cs.shape, cs.icon_id, cs.size, ci.image_data AS icon_image
      FROM category_styles cs
      LEFT JOIN custom_icons ci ON ci.id = cs.icon_id`
   ).all();
@@ -193,27 +194,28 @@ async function listCategoryStyles(env) {
       shape: row.shape,
       iconId: row.icon_id || null,
       iconImage: row.icon_image || null,
+      size: row.size,
     };
   }
   return Response.json(overrides);
 }
 
 async function saveCategoryStyle(request, env) {
-  const { category, label, color, shape, iconId } = await request.json();
+  const { category, label, color, shape, iconId, size } = await request.json();
   if (!category || !color || !shape) {
     return Response.json({ error: "category, color and shape are required" }, { status: 400 });
   }
 
   await env.DB.prepare(
-    `INSERT INTO category_styles (category, label, color, shape, icon_id)
-     VALUES (?, ?, ?, ?, ?)
+    `INSERT INTO category_styles (category, label, color, shape, icon_id, size)
+     VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(category) DO UPDATE SET label = excluded.label, color = excluded.color,
-       shape = excluded.shape, icon_id = excluded.icon_id`
+       shape = excluded.shape, icon_id = excluded.icon_id, size = excluded.size`
   )
-    .bind(category, label || null, color, shape, iconId || null)
+    .bind(category, label || null, color, shape, iconId || null, size ?? 0.6)
     .run();
 
-  return Response.json({ category, label, color, shape, iconId: iconId || null });
+  return Response.json({ category, label, color, shape, iconId: iconId || null, size: size ?? 0.6 });
 }
 
 // -- custom icon bank ------------------------------------------------------

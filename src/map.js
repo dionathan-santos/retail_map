@@ -1,6 +1,6 @@
 import maplibregl from "maplibre-gl";
 import basemapConfig from "./basemap-config.json";
-import { mergeCategories, categoryStyle, drawIcon } from "./styles/categories.js";
+import { mergeCategories, categoryStyle, drawIcon, DEFAULT_ICON_SIZE } from "./styles/categories.js";
 import { fetchCategoryStyles, fetchPoints, deletePoint } from "./api.js";
 
 export async function initMap() {
@@ -89,7 +89,7 @@ function loadImage(src) {
 export async function addPointsLayer(map, categories) {
   const points = await fetchPoints();
   await registerPointIcons(map, points);
-  const geojson = pointsToGeoJson(points);
+  const geojson = pointsToGeoJson(points, categories);
 
   if (map.getSource("retail-points")) {
     map.getSource("retail-points").setData(geojson);
@@ -104,7 +104,7 @@ export async function addPointsLayer(map, categories) {
     source: "retail-points",
     layout: {
       "icon-image": ["get", "iconImageId"],
-      "icon-size": 0.6,
+      "icon-size": ["get", "iconSize"],
       "icon-allow-overlap": true,
     },
     paint: {
@@ -163,13 +163,17 @@ async function registerPointIcons(map, points) {
   }
 }
 
-function pointsToGeoJson(points) {
+function pointsToGeoJson(points, categories) {
   return {
     type: "FeatureCollection",
     features: points.map((p) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.lng, p.lat] },
-      properties: { ...p, iconImageId: p.icon_id ? `custom-icon-${p.icon_id}` : `icon-${p.category}` },
+      properties: {
+        ...p,
+        iconImageId: p.icon_id ? `custom-icon-${p.icon_id}` : `icon-${p.category}`,
+        iconSize: p.icon_size ?? categoryStyle(categories, p.category).size ?? DEFAULT_ICON_SIZE,
+      },
     })),
   };
 }
