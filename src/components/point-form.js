@@ -1,4 +1,4 @@
-import { createPoint, updatePoint } from "../api.js";
+import { createPoint, updatePoint, fetchIcons } from "../api.js";
 import { refreshPoints } from "../map.js";
 
 // Single-point-add: click-to-place on the map, or type lat/lng directly.
@@ -6,8 +6,10 @@ import { refreshPoints } from "../map.js";
 // map.startEditingPoint(point) (set below) to populate this same form in
 // edit mode. Both paths write through the same /api/points endpoint(s) the
 // bulk upload uses, so all three flows stay consistent.
-export function renderPointForm(map, categories) {
+export async function renderPointForm(map, categories) {
   const panel = document.getElementById("point-form-panel");
+  const icons = await fetchIcons();
+
   panel.innerHTML = `
     <h3 id="point-form-heading">Add Point</h3>
     <button id="pick-on-map" type="button">Pick location on map</button>
@@ -17,6 +19,12 @@ export function renderPointForm(map, categories) {
       <label>Category
         <select name="category">
           ${Object.entries(categories).map(([key, c]) => `<option value="${key}">${c.label}</option>`).join("")}
+        </select>
+      </label>
+      <label>Icon
+        <select name="iconId">
+          <option value="">Category default</option>
+          ${icons.map((icon) => `<option value="${icon.id}">${icon.name}</option>`).join("")}
         </select>
       </label>
       <label>Lat <input name="lat" type="number" step="any" required /></label>
@@ -58,6 +66,7 @@ export function renderPointForm(map, categories) {
     form.elements.id.value = point.id;
     form.elements.name.value = point.name;
     form.elements.category.value = point.category;
+    form.elements.iconId.value = point.icon_id || "";
     form.elements.lat.value = point.lat;
     form.elements.lng.value = point.lng;
     form.elements.address.value = point.address || "";
@@ -96,6 +105,7 @@ export function renderPointForm(map, categories) {
     delete data.id;
     data.lat = Number(data.lat);
     data.lng = Number(data.lng);
+    data.iconId = data.iconId || null;
     data.last_updated = new Date().toISOString().slice(0, 10);
 
     try {

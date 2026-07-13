@@ -88,6 +88,7 @@ function loadImage(src) {
 
 export async function addPointsLayer(map, categories) {
   const points = await fetchPoints();
+  await registerPointIcons(map, points);
   const geojson = pointsToGeoJson(points);
 
   if (map.getSource("retail-points")) {
@@ -102,7 +103,7 @@ export async function addPointsLayer(map, categories) {
     type: "symbol",
     source: "retail-points",
     layout: {
-      "icon-image": ["concat", "icon-", ["get", "category"]],
+      "icon-image": ["get", "iconImageId"],
       "icon-size": 0.6,
       "icon-allow-overlap": true,
     },
@@ -145,13 +146,30 @@ export async function addPointsLayer(map, categories) {
   map.on("mouseleave", "retail-points-symbol", () => (map.getCanvas().style.cursor = ""));
 }
 
+// Registers a sprite image for each distinct per-point custom icon
+// (points.icon_id, joined server-side to points.icon_image) under
+// `custom-icon-<id>`, so pointsToGeoJson's iconImageId can reference it
+// directly instead of falling back to the point's category icon.
+async function registerPointIcons(map, points) {
+  const seen = new Set();
+  for (const p of points) {
+    if (!p.icon_id || !p.icon_image || seen.has(p.icon_id)) continue;
+    seen.add(p.icon_id);
+
+    const imageId = `custom-icon-${p.icon_id}`;
+    if (map.hasImage(imageId)) continue;
+    const img = await loadImage(`data:image/png;base64,${p.icon_image}`);
+    map.addImage(imageId, img);
+  }
+}
+
 function pointsToGeoJson(points) {
   return {
     type: "FeatureCollection",
     features: points.map((p) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.lng, p.lat] },
-      properties: p,
+      properties: { ...p, iconImageId: p.icon_id ? `custom-icon-${p.icon_id}` : `icon-${p.category}` },
     })),
   };
 }
