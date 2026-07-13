@@ -1,13 +1,26 @@
--- Run this once in the D1 database's dashboard Console tab (or via
--- `wrangler d1 execute retail-map-db --file=schema.sql`) after creating the
--- database. See README.md "Persisting drawn shapes (Cloudflare D1)".
+-- D1 schema for the Retail Map. Apply with:
+--   wrangler d1 execute retail-map-db --file=schema.sql
 
-CREATE TABLE IF NOT EXISTS drawn_features (
-  id TEXT PRIMARY KEY,
-  layer_key TEXT NOT NULL,
-  geometry TEXT NOT NULL,
-  properties TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+CREATE TABLE IF NOT EXISTS points (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  lat REAL NOT NULL,
+  lng REAL NOT NULL,
+  address TEXT,
+  status TEXT DEFAULT 'active',
+  source TEXT,
+  last_updated TEXT,
+  icon_color TEXT,   -- optional per-point override of the category color
+  icon_shape TEXT,   -- optional per-point override of the category shape
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_drawn_features_layer_key ON drawn_features (layer_key);
+-- User-customized category styles (color/shape), overriding the app's
+-- built-in defaults (src/styles/categories.js: DEFAULT_CATEGORIES).
+CREATE TABLE IF NOT EXISTS category_styles (
+  category TEXT PRIMARY KEY,
+  label TEXT,
+  color TEXT NOT NULL,
+  shape TEXT NOT NULL
+);

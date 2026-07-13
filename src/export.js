@@ -1,5 +1,4 @@
 import { jsPDF } from "jspdf";
-import { CATEGORIES } from "./styles/categories.js";
 
 // Print sizes in points (72pt/in), landscape.
 const PAGE_SIZES = {
@@ -27,7 +26,7 @@ export async function exportMapToPdf(map, { size = "A1" } = {}) {
   const mapAreaWidth = width * 0.82;
   pdf.addImage(imageData, "PNG", 0, 0, mapAreaWidth, height);
 
-  drawLegend(pdf, mapAreaWidth, 0, width - mapAreaWidth, height);
+  drawLegend(pdf, mapAreaWidth, 0, width - mapAreaWidth, height, map.categories);
 
   pdf.save(`edmonton-retail-map-${size}.pdf`);
 }
@@ -36,7 +35,7 @@ function waitForNextFrame(map) {
   return new Promise((resolve) => map.once("render", () => requestAnimationFrame(resolve)));
 }
 
-function drawLegend(pdf, x, y, panelWidth, panelHeight) {
+function drawLegend(pdf, x, y, panelWidth, panelHeight, categories) {
   const padding = 24;
   let cursorY = y + padding + 20;
 
@@ -49,24 +48,11 @@ function drawLegend(pdf, x, y, panelWidth, panelHeight) {
   cursorY += 28;
 
   pdf.setFontSize(11);
-  for (const { label, color } of Object.values(CATEGORIES)) {
+  for (const { label, color } of Object.values(categories)) {
     pdf.setFillColor(color);
     pdf.circle(x + padding + 6, cursorY - 4, 6, "F");
     pdf.setTextColor("#1A1A1A");
     pdf.text(label, x + padding + 22, cursorY);
     cursorY += 22;
   }
-
-  cursorY += 12;
-  pdf.setDrawColor("#1F4E79");
-  pdf.setLineWidth(2);
-  pdf.line(x + padding, cursorY, x + padding + 24, cursorY);
-  pdf.text("Major retail zone", x + padding + 32, cursorY + 4);
-  cursorY += 22;
-
-  pdf.setLineDashPattern([3, 2], 0);
-  pdf.setLineWidth(1.2);
-  pdf.line(x + padding, cursorY, x + padding + 24, cursorY);
-  pdf.setLineDashPattern([], 0);
-  pdf.text("Secondary retail zone", x + padding + 32, cursorY + 4);
 }
