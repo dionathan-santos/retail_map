@@ -15,6 +15,12 @@ export async function initMap() {
     minZoom: 8,
     maxZoom: 19,
     preserveDrawingBuffer: true, // required for canvas export
+    // MapLibre's default is a conservative 4096x4096 -- well under the
+    // print-resolution canvas src/export.js temporarily grows to (up to
+    // ~7000x5000 for A0 at 150 DPI), which silently downscaled the export
+    // and left blank margins around it. Ask the actual GPU what it
+    // supports instead of hardcoding a number.
+    maxCanvasSize: getSafeMaxCanvasSize(),
   });
 
   map.addControl(new maplibregl.NavigationControl(), "top-right");
@@ -26,6 +32,13 @@ export async function initMap() {
 
   map.categories = categories;
   return map;
+}
+
+function getSafeMaxCanvasSize() {
+  const canvas = document.createElement("canvas");
+  const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+  const maxSize = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 4096;
+  return [maxSize, maxSize];
 }
 
 function centerOf(coordinates) {
