@@ -2,6 +2,21 @@ name = "retail-map"
 compatibility_date = "2024-11-01"
 pages_build_output_dir = "dist"
 
+# The Cloudflare dashboard's "Create application" flow provisions this repo
+# as a Workers (git-connected) project rather than a classic Pages project,
+# so its deploy step runs `npx wrangler deploy` instead of
+# `wrangler pages deploy`. This [assets] block makes that command work by
+# telling Wrangler to serve the Vite build output as static assets — no
+# Worker entry-point (`main`) is needed since this is a static site.
+#
+# Caveat: the D1-backed Pages Function in functions/api/features/[layerKey].js
+# only runs under `wrangler pages deploy`'s file-based routing, so drawn
+# zones/ASP polygons will keep falling back to localStorage-only persistence
+# until this project is migrated to a true Pages project (or the function is
+# rewritten as a Worker route).
+[assets]
+directory = "./dist"
+
 # Protomaps basemap tiles are served from a Cloudflare R2 bucket, referenced
 # directly by URL in src/map.js (no Worker binding required for static reads).
 # Swap PROTOMAPS_URL in src/map.js once the real bucket is provisioned.
