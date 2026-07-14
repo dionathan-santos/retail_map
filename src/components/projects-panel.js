@@ -23,12 +23,12 @@ function render() {
   panelRef.innerHTML = "";
 
   const heading = document.createElement("h3");
-  heading.textContent = "Projetos";
+  heading.textContent = "Projects";
   panelRef.appendChild(heading);
 
   const newProjectBtn = document.createElement("button");
   newProjectBtn.className = "projects-new-btn";
-  newProjectBtn.textContent = "+ Novo Projeto";
+  newProjectBtn.textContent = "+ New Project";
   newProjectBtn.addEventListener("click", openNewProjectModal);
   panelRef.appendChild(newProjectBtn);
 
@@ -38,14 +38,14 @@ function render() {
   }
 
   const listHeading = document.createElement("h4");
-  listHeading.textContent = "Salvos";
+  listHeading.textContent = "Saved";
   panelRef.appendChild(listHeading);
 
   const projects = listProjects();
   if (projects.length === 0) {
     const empty = document.createElement("p");
     empty.className = "projects-empty";
-    empty.textContent = "Nenhum projeto salvo ainda.";
+    empty.textContent = "No saved projects yet.";
     panelRef.appendChild(empty);
   }
 
@@ -65,12 +65,12 @@ function renderActiveProject(project) {
 
   const meta = document.createElement("div");
   meta.className = "active-project-meta";
-  meta.textContent = `Cliente: ${project.client} · Por: ${project.user}`;
+  meta.textContent = `Client: ${project.client} · By: ${project.user}`;
   box.appendChild(meta);
 
   const addPointBtn = document.createElement("button");
   addPointBtn.className = "projects-add-point-btn";
-  addPointBtn.textContent = addPointMode ? "Clique no mapa para adicionar…" : "Adicionar Ponto";
+  addPointBtn.textContent = addPointMode ? "Click the map to add…" : "Add Point";
   addPointBtn.classList.toggle("active", addPointMode);
   addPointBtn.addEventListener("click", () => toggleAddPointMode());
   box.appendChild(addPointBtn);
@@ -96,14 +96,14 @@ function renderActiveProject(project) {
 
   const saveBtn = document.createElement("button");
   saveBtn.className = "projects-save-btn";
-  saveBtn.textContent = "Salvar Vista Atual";
-  saveBtn.title = "Salva a posição/zoom atual do mapa e as camadas visíveis no projeto";
+  saveBtn.textContent = "Save Current View";
+  saveBtn.title = "Saves the map's current position/zoom and visible layers to the project";
   saveBtn.addEventListener("click", () => saveCurrentView(project.id));
   box.appendChild(saveBtn);
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "projects-close-btn";
-  closeBtn.textContent = "Fechar Projeto";
+  closeBtn.textContent = "Close Project";
   closeBtn.addEventListener("click", () => setActiveProject(null));
   box.appendChild(closeBtn);
 
@@ -125,15 +125,15 @@ function renderProjectRow(project) {
   actions.className = "project-row-actions";
 
   const openBtn = document.createElement("button");
-  openBtn.textContent = "Abrir";
+  openBtn.textContent = "Open";
   openBtn.addEventListener("click", () => setActiveProject(project.id));
   actions.appendChild(openBtn);
 
   const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "Excluir";
+  deleteBtn.textContent = "Delete";
   deleteBtn.className = "project-delete-btn";
   deleteBtn.addEventListener("click", () => {
-    if (!confirm(`Excluir o projeto "${project.name}"?`)) return;
+    if (!confirm(`Delete project "${project.name}"?`)) return;
     deleteProject(project.id);
     if (activeProjectId === project.id) setActiveProject(null);
     else render();
@@ -167,7 +167,7 @@ function toggleAddPointMode() {
   addPointMode = !addPointMode;
   if (addPointMode) {
     onMapClick = (e) => {
-      const label = prompt("Nome do ponto:");
+      const label = prompt("Point name:");
       if (label) addPoint(activeProjectId, e.lngLat.lng, e.lngLat.lat, label);
       disableAddPointMode();
     };
@@ -239,13 +239,13 @@ function openNewProjectModal() {
   const modal = document.createElement("div");
   modal.className = "project-modal";
   modal.innerHTML = `
-    <h3>Novo Projeto</h3>
-    <label>Nome do Projeto<input type="text" id="new-project-name" required></label>
-    <label>Nome do Cliente<input type="text" id="new-project-client" required></label>
-    <label>Nome do Usuário<input type="text" id="new-project-user" required></label>
+    <h3>New Project</h3>
+    <label>Project Name<input type="text" id="new-project-name" required></label>
+    <label>Client Name<input type="text" id="new-project-client" required></label>
+    <label>User Name<input type="text" id="new-project-user" required></label>
     <div class="project-modal-actions">
-      <button type="button" id="new-project-cancel">Cancelar</button>
-      <button type="button" id="new-project-submit">Criar Projeto</button>
+      <button type="button" id="new-project-cancel">Cancel</button>
+      <button type="button" id="new-project-submit">Create Project</button>
     </div>
   `;
   overlay.appendChild(modal);
@@ -261,7 +261,7 @@ function openNewProjectModal() {
     const user = overlay.querySelector("#new-project-user").value.trim();
 
     if (!name || !client || !user) {
-      alert("Preencha nome do projeto, cliente e usuário.");
+      alert("Fill in the project name, client name, and user name.");
       return;
     }
 
