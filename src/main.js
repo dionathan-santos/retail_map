@@ -8,6 +8,7 @@ import { renderCategoryStylePicker } from "./components/category-style-picker.js
 import { renderIconBank } from "./components/icon-bank.js";
 import { renderDrawToolbar } from "./components/draw-toolbar.js";
 import { renderProjectsPanel } from "./components/projects-panel.js";
+import { onProjectChange } from "./current-project.js";
 import { exportMapToPdf } from "./export.js";
 
 async function main() {
@@ -31,6 +32,15 @@ async function main() {
 
   document.getElementById("toggle-projects").addEventListener("click", () => {
     document.getElementById("projects-panel").classList.toggle("visible");
+  });
+
+  // Keeps the header button legible even with the drawer closed -- it's
+  // the only always-visible sign of which environment (a project, or the
+  // temporary base map) new points/shapes will be saved to.
+  const toggleProjectsBtn = document.getElementById("toggle-projects");
+  onProjectChange((project) => {
+    toggleProjectsBtn.textContent = project ? `Project: ${project.name}` : "Projects";
+    toggleProjectsBtn.classList.toggle("active-project-indicator", Boolean(project));
   });
 }
 

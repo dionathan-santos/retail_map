@@ -48,6 +48,15 @@ html, body {
   background: #EAF1F8;
 }
 
+#app-header button.active-project-indicator {
+  background: #7A1F1F;
+  color: white;
+}
+
+#app-header button.active-project-indicator:hover {
+  background: #6B1A1A;
+}
+
 .panel {
   position: absolute;
   z-index: 10;
