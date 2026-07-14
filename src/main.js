@@ -20,10 +20,10 @@ async function main() {
     renderBulkUpload(map);
     renderIconBank(map, map.categories);
     renderCategoryStylePicker(map, map.categories);
-    renderProjectsPanel(map);
 
     const drawApi = await initDraw(map);
     renderDrawToolbar(drawApi);
+    renderProjectsPanel(map, drawApi);
   });
 
   document.getElementById("export-a1").addEventListener("click", () => exportMapToPdf(map, { size: "A1" }));

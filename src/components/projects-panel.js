@@ -1,30 +1,38 @@
-import {
-  listProjects,
-  getProject,
-  createProject,
-  updateProject,
-  deleteProject,
-} from "../projects-store.js";
-import { setProjectPoints, TOGGLEABLE_LAYERS } from "../map.js";
+import { fetchProjects, createProjectApi, deleteProjectApi } from "../api.js";
+import { getCurrentProject, setCurrentProject } from "../current-project.js";
+import { refreshPoints } from "../map.js";
 
-let activeProjectId = null;
-let addPointMode = false;
 let mapRef = null;
+let drawApiRef = null;
 let panelRef = null;
-let onMapClick = null;
 
-export function renderProjectsPanel(map) {
+// Switches which "environment" points/shapes are read from and written to:
+// a project (isolated, permanent) or the base map (shared, temporary --
+// see the 24h cleanup in worker/index.js). Every tool that creates points
+// or shapes (point-form.js, bulk-upload.js, draw.js) reads
+// current-project.js at write time, so nothing here needs to know about
+// those tools directly -- switching the active project and refetching is
+// enough to keep the map in sync.
+export function renderProjectsPanel(map, drawApi) {
   mapRef = map;
+  drawApiRef = drawApi;
   panelRef = document.getElementById("projects-panel");
   render();
 }
 
-function render() {
+async function render() {
   panelRef.innerHTML = "";
 
   const heading = document.createElement("h3");
   heading.textContent = "Projects";
   panelRef.appendChild(heading);
+
+  const current = getCurrentProject();
+  if (current) {
+    panelRef.appendChild(renderActiveProjectBanner(current));
+  } else {
+    panelRef.appendChild(renderBaseMapNotice());
+  }
 
   const newProjectBtn = document.createElement("button");
   newProjectBtn.className = "projects-new-btn";
@@ -32,16 +40,24 @@ function render() {
   newProjectBtn.addEventListener("click", openNewProjectModal);
   panelRef.appendChild(newProjectBtn);
 
-  const activeProject = activeProjectId ? getProject(activeProjectId) : null;
-  if (activeProject) {
-    panelRef.appendChild(renderActiveProject(activeProject));
-  }
-
   const listHeading = document.createElement("h4");
   listHeading.textContent = "Saved";
   panelRef.appendChild(listHeading);
 
-  const projects = listProjects();
+  const loading = document.createElement("p");
+  loading.className = "projects-empty";
+  loading.textContent = "Loading…";
+  panelRef.appendChild(loading);
+
+  let projects;
+  try {
+    projects = await fetchProjects();
+  } catch (err) {
+    loading.textContent = `Error: ${err.message}`;
+    return;
+  }
+  loading.remove();
+
   if (projects.length === 0) {
     const empty = document.createElement("p");
     empty.className = "projects-empty";
@@ -54,13 +70,13 @@ function render() {
   }
 }
 
-function renderActiveProject(project) {
+function renderActiveProjectBanner(project) {
   const box = document.createElement("div");
   box.className = "active-project-box";
 
   const title = document.createElement("div");
   title.className = "active-project-title";
-  title.textContent = project.name;
+  title.textContent = `Inside: ${project.name}`;
   box.appendChild(title);
 
   const meta = document.createElement("div");
@@ -68,52 +84,33 @@ function renderActiveProject(project) {
   meta.textContent = `Client: ${project.client} · By: ${project.user}`;
   box.appendChild(meta);
 
-  const addPointBtn = document.createElement("button");
-  addPointBtn.className = "projects-add-point-btn";
-  addPointBtn.textContent = addPointMode ? "Click the map to add…" : "Add Point";
-  addPointBtn.classList.toggle("active", addPointMode);
-  addPointBtn.addEventListener("click", () => toggleAddPointMode());
-  box.appendChild(addPointBtn);
+  const note = document.createElement("p");
+  note.className = "projects-note";
+  note.textContent = "Everything you add or draw here is saved to this project only.";
+  box.appendChild(note);
 
-  const pointsList = document.createElement("ul");
-  pointsList.className = "project-points-list";
-  for (const point of project.points) {
-    const li = document.createElement("li");
-
-    const label = document.createElement("span");
-    label.textContent = point.label;
-    li.appendChild(label);
-
-    const removeBtn = document.createElement("button");
-    removeBtn.className = "project-point-remove";
-    removeBtn.textContent = "✕";
-    removeBtn.addEventListener("click", () => removePoint(project.id, point.id));
-    li.appendChild(removeBtn);
-
-    pointsList.appendChild(li);
-  }
-  box.appendChild(pointsList);
-
-  const saveBtn = document.createElement("button");
-  saveBtn.className = "projects-save-btn";
-  saveBtn.textContent = "Save Current View";
-  saveBtn.title = "Saves the map's current position/zoom and visible layers to the project";
-  saveBtn.addEventListener("click", () => saveCurrentView(project.id));
-  box.appendChild(saveBtn);
-
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "projects-close-btn";
-  closeBtn.textContent = "Close Project";
-  closeBtn.addEventListener("click", () => setActiveProject(null));
-  box.appendChild(closeBtn);
+  const exitBtn = document.createElement("button");
+  exitBtn.className = "projects-close-btn";
+  exitBtn.textContent = "Exit to Base Map";
+  exitBtn.addEventListener("click", () => switchProject(null));
+  box.appendChild(exitBtn);
 
   return box;
 }
 
+function renderBaseMapNotice() {
+  const note = document.createElement("p");
+  note.className = "projects-note projects-note-base";
+  note.textContent =
+    "You're on the base map. Points and shapes added here are temporary and are cleared after 24 hours. Open a project to save your work.";
+  return note;
+}
+
 function renderProjectRow(project) {
+  const current = getCurrentProject();
   const row = document.createElement("div");
   row.className = "project-row";
-  if (project.id === activeProjectId) row.classList.add("active");
+  if (current?.id === project.id) row.classList.add("active");
 
   const info = document.createElement("div");
   info.className = "project-row-info";
@@ -125,18 +122,22 @@ function renderProjectRow(project) {
   actions.className = "project-row-actions";
 
   const openBtn = document.createElement("button");
-  openBtn.textContent = "Open";
-  openBtn.addEventListener("click", () => setActiveProject(project.id));
+  openBtn.textContent = current?.id === project.id ? "Open" : "Enter";
+  openBtn.disabled = current?.id === project.id;
+  openBtn.addEventListener("click", () => switchProject(project));
   actions.appendChild(openBtn);
 
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "Delete";
   deleteBtn.className = "project-delete-btn";
-  deleteBtn.addEventListener("click", () => {
-    if (!confirm(`Delete project "${project.name}"?`)) return;
-    deleteProject(project.id);
-    if (activeProjectId === project.id) setActiveProject(null);
-    else render();
+  deleteBtn.addEventListener("click", async () => {
+    if (!confirm(`Delete project "${project.name}"? This also deletes all its points and shapes.`)) return;
+    await deleteProjectApi(project.id);
+    if (current?.id === project.id) {
+      await switchProject(null);
+    } else {
+      await render();
+    }
   });
   actions.appendChild(deleteBtn);
 
@@ -144,91 +145,10 @@ function renderProjectRow(project) {
   return row;
 }
 
-function setActiveProject(id) {
-  disableAddPointMode();
-  activeProjectId = id;
-
-  const project = id ? getProject(id) : null;
-  if (project) {
-    mapRef.jumpTo({ center: project.view.center, zoom: project.view.zoom });
-    for (const [toggleId, visible] of Object.entries(project.layers)) {
-      const checkbox = document.getElementById(toggleId);
-      if (checkbox) checkbox.checked = visible;
-    }
-    setProjectPoints(mapRef, project.points);
-  } else {
-    setProjectPoints(mapRef, []);
-  }
-
-  render();
-}
-
-function toggleAddPointMode() {
-  addPointMode = !addPointMode;
-  if (addPointMode) {
-    onMapClick = (e) => {
-      const label = prompt("Point name:");
-      if (label) addPoint(activeProjectId, e.lngLat.lng, e.lngLat.lat, label);
-      disableAddPointMode();
-    };
-    mapRef.on("click", onMapClick);
-    mapRef.getCanvas().style.cursor = "crosshair";
-  } else {
-    disableAddPointMode();
-  }
-  render();
-}
-
-function disableAddPointMode() {
-  addPointMode = false;
-  if (onMapClick) {
-    mapRef.off("click", onMapClick);
-    onMapClick = null;
-  }
-  if (mapRef) mapRef.getCanvas().style.cursor = "";
-}
-
-function addPoint(projectId, lng, lat, label) {
-  const project = getProject(projectId);
-  if (!project) return;
-
-  const point = { id: crypto.randomUUID(), lng, lat, label };
-  const points = [...project.points, point];
-  updateProject(projectId, { points });
-  setProjectPoints(mapRef, points);
-  render();
-}
-
-function removePoint(projectId, pointId) {
-  const project = getProject(projectId);
-  if (!project) return;
-
-  const points = project.points.filter((p) => p.id !== pointId);
-  updateProject(projectId, { points });
-  setProjectPoints(mapRef, points);
-  render();
-}
-
-function saveCurrentView(projectId) {
-  updateProject(projectId, {
-    view: currentView(),
-    layers: currentLayerVisibility(),
-  });
-  render();
-}
-
-function currentView() {
-  const center = mapRef.getCenter();
-  return { center: [center.lng, center.lat], zoom: mapRef.getZoom() };
-}
-
-function currentLayerVisibility() {
-  const layers = {};
-  for (const toggleId of Object.keys(TOGGLEABLE_LAYERS)) {
-    const checkbox = document.getElementById(toggleId);
-    layers[toggleId] = checkbox ? checkbox.checked : true;
-  }
-  return layers;
+async function switchProject(project) {
+  setCurrentProject(project);
+  await Promise.all([refreshPoints(mapRef), drawApiRef.refreshShapes(project?.id ?? null)]);
+  await render();
 }
 
 function openNewProjectModal() {
@@ -255,7 +175,7 @@ function openNewProjectModal() {
     if (e.target === overlay) closeModal();
   });
 
-  overlay.querySelector("#new-project-submit").addEventListener("click", () => {
+  overlay.querySelector("#new-project-submit").addEventListener("click", async () => {
     const name = overlay.querySelector("#new-project-name").value.trim();
     const client = overlay.querySelector("#new-project-client").value.trim();
     const user = overlay.querySelector("#new-project-user").value.trim();
@@ -265,15 +185,9 @@ function openNewProjectModal() {
       return;
     }
 
-    const project = createProject({
-      name,
-      client,
-      user,
-      view: currentView(),
-      layers: currentLayerVisibility(),
-    });
+    const project = await createProjectApi({ name, client, user });
     closeModal();
-    setActiveProject(project.id);
+    await switchProject(project);
   });
 }
 

@@ -1,5 +1,6 @@
 import { createPoint, updatePoint, fetchIcons } from "../api.js";
 import { refreshPoints } from "../map.js";
+import { getCurrentProjectId } from "../current-project.js";
 
 // Single-point-add: click-to-place on the map, or type lat/lng directly.
 // Also handles editing an existing point -- map.js's click popup calls
@@ -124,7 +125,7 @@ export async function renderPointForm(map, categories) {
       if (id) {
         await updatePoint(id, data);
       } else {
-        await createPoint(data);
+        await createPoint(data, getCurrentProjectId());
       }
       await refreshPoints(map);
       const message = id ? `Updated "${data.name}".` : `Saved "${data.name}".`;

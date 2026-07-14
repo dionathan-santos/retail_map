@@ -1,6 +1,7 @@
 import { TerraDraw, TerraDrawPolygonMode, TerraDrawSelectMode } from "terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
 import { fetchShapes, createShape, updateShape, deleteShapeApi } from "./api.js";
+import { getCurrentProjectId } from "./current-project.js";
 
 const DEFAULT_STYLE = { color: "#5B3A9B", fillOpacity: 0.3 };
 
@@ -44,21 +45,16 @@ export async function initDraw(map) {
   draw.start();
   draw.setMode("select");
 
-  const existing = await fetchShapes();
-  if (existing.length > 0) {
-    draw.addFeatures(
-      existing.map((shape) => ({
-        id: shape.id,
-        type: "Feature",
-        geometry: shape.geometry,
-        properties: { ...shape.properties, mode: "polygon" },
-      }))
-    );
-  }
-
   let selectedId = null;
   draw.on("select", (id) => (selectedId = id));
   draw.on("deselect", () => (selectedId = null));
+
+  // Set while loadShapes() swaps the store's contents for another
+  // project's/the base map's shapes -- clear()/addFeatures() still fire
+  // "change" events, but those are just us re-syncing the local view, not
+  // user edits, so they must not hit the API (that would delete/recreate
+  // shapes that are already correctly persisted).
+  let suppressSync = false;
 
   // Persist a newly drawn polygon only once it's actually finished, rather
   // than reacting to every "create" change event -- while a polygon is
@@ -67,11 +63,11 @@ export async function initDraw(map) {
   // "currentlyDrawing" placeholder with degenerate coordinates), and those
   // aren't real shapes to save.
   draw.on("finish", async (id, { action }) => {
-    if (action !== "draw") return;
+    if (suppressSync || action !== "draw") return;
     draw.updateFeatureProperties(id, { ...draw.currentStyle, name: "" });
     const feature = draw.getSnapshotFeature(id);
     if (feature && feature.geometry.type === "Polygon") {
-      await createShape(id, feature.geometry, feature.properties);
+      await createShape(id, feature.geometry, feature.properties, getCurrentProjectId());
     }
   });
 
@@ -82,6 +78,7 @@ export async function initDraw(map) {
   // come through as "delete". "create" is intentionally not handled here;
   // see the "finish" listener above.
   draw.on("change", async (ids, type) => {
+    if (suppressSync) return;
     if (type === "update") {
       for (const id of ids) {
         const feature = draw.getSnapshotFeature(id);
@@ -94,6 +91,31 @@ export async function initDraw(map) {
       }
     }
   });
+
+  // Swaps the store's contents for the given project's shapes (or the base
+  // map's, if projectId is omitted). Used both for the initial load and
+  // whenever projects-panel.js switches the active project.
+  async function loadShapes(projectId) {
+    suppressSync = true;
+    try {
+      draw.clear();
+      const shapes = await fetchShapes(projectId);
+      if (shapes.length > 0) {
+        draw.addFeatures(
+          shapes.map((shape) => ({
+            id: shape.id,
+            type: "Feature",
+            geometry: shape.geometry,
+            properties: { ...shape.properties, mode: "polygon" },
+          }))
+        );
+      }
+    } finally {
+      suppressSync = false;
+    }
+  }
+
+  await loadShapes(getCurrentProjectId());
 
   return {
     draw,
@@ -110,5 +132,6 @@ export async function initDraw(map) {
       draw.removeFeatures([selectedId]);
       selectedId = null;
     },
+    refreshShapes: loadShapes,
   };
 }
