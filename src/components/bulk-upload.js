@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import { createPointsBulk } from "../api.js";
 import { refreshPoints } from "../map.js";
+import { getCurrentProjectId } from "../current-project.js";
 
 // Bulk upload: parses an uploaded Excel file client-side (CM Land Tracker
 // convention: name, category, lat, lng, address, status, source,
@@ -33,7 +34,7 @@ export function renderBulkUpload(map) {
         return;
       }
 
-      const result = await createPointsBulk(points);
+      const result = await createPointsBulk(points, getCurrentProjectId());
       await refreshPoints(map);
       status.textContent = `Inserted ${result.inserted} point(s).` + (skipped ? ` Skipped ${skipped} invalid row(s).` : "");
     } catch (err) {

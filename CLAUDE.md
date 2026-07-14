@@ -96,6 +96,9 @@
       icon-bank.js             # upload de PNGs custom, atribuídos por
                                # categoria ou por ponto
       category-style-picker.js
+      projects-panel.js        # painel de Projetos (ver seção abaixo)
+    current-project.js         # estado compartilhado: qual projeto está
+                                # ativo agora (null = mapa base)
     /styles
       categories.js            # paleta/formas de ícone por categoria
       main.css
@@ -113,3 +116,37 @@
   D1, ler o `README.md` (ele documenta a pivotagem de v1 -> v2 e como
   rodar tudo localmente) — o `RETAIL_MAP_SPEC.md` é o spec **antigo**
   (v1, Protomaps/GeoJSON estático) e não reflete mais a arquitetura atual.
+
+## Projetos (ambientes isolados)
+
+- Um "Projeto" é um ambiente isolado: nome, cliente e usuário (D1,
+  tabela `projects`). Enquanto um projeto está ativo, os pontos e formas
+  desenhadas (`shapes`) criados pelas ferramentas normais do mapa
+  (Add Point, Bulk Upload, Draw Polygon) são gravados com
+  `project_id = <id do projeto>` em vez de ficarem soltos no mapa base.
+  Ícones customizados e estilos de categoria continuam **globais**,
+  compartilhados entre todos os projetos e o mapa base.
+- `src/current-project.js` guarda qual projeto está ativo agora (client-side,
+  em memória — não persiste entre reloads de página de propósito). Todo
+  código que cria pontos/shapes lê esse estado na hora de gravar
+  (`point-form.js`, `bulk-upload.js`, `draw.js`); todo código que lista
+  pontos/shapes passa esse id pra API (`map.js`, `draw.js`).
+- **Mapa base = temporário.** Pontos/shapes criados fora de qualquer
+  projeto (`project_id IS NULL`) são apagados depois de 24h — o Worker
+  filtra isso em `GET /api/points` e `/api/shapes` (não aparecem mais no
+  mapa depois de 24h, mesmo antes do cron rodar), e um Cloudflare Cron
+  Trigger (`[triggers]` em `wrangler.toml`, roda de hora em hora) apaga
+  fisicamente essas linhas do D1 depois disso.
+- **Dados que já existiam antes dessa feature nunca são apagados
+  automaticamente.** Na primeira request depois do deploy,
+  `worker/index.js` (`ensureSchema()`) migra sozinho o banco de produção
+  (adiciona a tabela `projects` e a coluna `project_id` em `points`/
+  `shapes` via `ALTER TABLE`, sem precisar rodar `wrangler d1 execute
+  --remote` manualmente) e grava em `app_meta` o timestamp desse momento
+  (`base_map_temporary_since`). A regra das 24h só vale pra linhas criadas
+  **depois** desse timestamp — tudo que já existia continua visível pra
+  sempre, a não ser que alguém apague manualmente ou mova pra dentro de
+  um projeto.
+- Deletar um projeto (`DELETE /api/projects/:id`) apaga em cascata os
+  pontos e shapes dele — D1/SQLite não faz cascade automático de FK, isso
+  é feito manualmente no handler.

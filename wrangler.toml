@@ -17,3 +17,8 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "retail-map-db"
 database_id = "a8e289c2-31cf-484a-8430-27fad42d2a2b"
+
+# Hourly sweep for expired base-map data (points/shapes with project_id IS
+# NULL older than 24h) -- see cleanupExpiredBaseMapData in worker/index.js.
+[triggers]
+crons = ["0 * * * *"]

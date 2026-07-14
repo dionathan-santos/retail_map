@@ -441,6 +441,11 @@ html, body {
   cursor: pointer;
 }
 
+.project-row-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .project-delete-btn {
   color: #C0392B;
 }
@@ -464,8 +469,24 @@ html, body {
   margin: 2px 0 8px;
 }
 
-.projects-add-point-btn,
-.projects-save-btn,
+.projects-note {
+  font-size: 11px;
+  color: #6B7280;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.active-project-box .projects-note {
+  margin: 0 0 8px;
+}
+
+.projects-note-base {
+  padding: 8px 10px;
+  border: 1px dashed var(--panel-border);
+  border-radius: 6px;
+  background: #FAFAFA;
+}
+
 .projects-close-btn {
   width: 100%;
   margin-top: 6px;
@@ -477,36 +498,6 @@ html, body {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-}
-
-.projects-add-point-btn.active {
-  background: #7A1F1F;
-  border-color: #7A1F1F;
-  color: white;
-}
-
-.project-points-list {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  max-height: 140px;
-  overflow-y: auto;
-}
-
-.project-points-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  padding: 3px 0;
-}
-
-.project-point-remove {
-  border: none;
-  background: none;
-  color: #C0392B;
-  cursor: pointer;
-  font-size: 12px;
 }
 
 #project-modal-overlay {

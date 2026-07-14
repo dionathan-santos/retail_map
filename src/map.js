@@ -2,6 +2,7 @@ import maplibregl from "maplibre-gl";
 import basemapConfig from "./basemap-config.json";
 import { mergeCategories, categoryStyle, drawIcon, DEFAULT_ICON_SIZE } from "./styles/categories.js";
 import { fetchCategoryStyles, fetchPoints, deletePoint } from "./api.js";
+import { getCurrentProjectId } from "./current-project.js";
 
 export async function initMap() {
   const overrides = await fetchCategoryStyles();
@@ -101,7 +102,7 @@ function loadImage(src) {
 }
 
 export async function addPointsLayer(map, categories) {
-  const points = await fetchPoints();
+  const points = await fetchPoints(getCurrentProjectId());
   await registerPointIcons(map, points);
   const geojson = pointsToGeoJson(points, categories);
 
