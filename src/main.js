@@ -7,6 +7,7 @@ import { renderBulkUpload } from "./components/bulk-upload.js";
 import { renderCategoryStylePicker } from "./components/category-style-picker.js";
 import { renderIconBank } from "./components/icon-bank.js";
 import { renderDrawToolbar } from "./components/draw-toolbar.js";
+import { renderProjectsPanel } from "./components/projects-panel.js";
 import { exportMapToPdf } from "./export.js";
 
 async function main() {
@@ -19,6 +20,7 @@ async function main() {
     renderBulkUpload(map);
     renderIconBank(map, map.categories);
     renderCategoryStylePicker(map, map.categories);
+    renderProjectsPanel(map);
 
     const drawApi = await initDraw(map);
     renderDrawToolbar(drawApi);
@@ -26,6 +28,10 @@ async function main() {
 
   document.getElementById("export-a1").addEventListener("click", () => exportMapToPdf(map, { size: "A1" }));
   document.getElementById("export-a0").addEventListener("click", () => exportMapToPdf(map, { size: "A0" }));
+
+  document.getElementById("toggle-projects").addEventListener("click", () => {
+    document.getElementById("projects-panel").classList.toggle("visible");
+  });
 }
 
 main();

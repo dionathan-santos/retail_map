@@ -28,6 +28,7 @@ export async function initMap() {
   map.on("load", async () => {
     await registerCategoryIcons(map, categories);
     await addPointsLayer(map, categories);
+    addProjectPointsLayer(map);
   });
 
   map.categories = categories;
@@ -193,6 +194,54 @@ function pointsToGeoJson(points, categories) {
 
 export async function refreshPoints(map) {
   await addPointsLayer(map, map.categories);
+}
+
+// Project-specific annotation pins (src/projects-store.js), kept separate
+// from the D1-backed retail-points layer above: these are per-project,
+// client-only markers, not part of the shared retail points database.
+// No text-field label here either, for the same glyph-CDN-independence
+// reason as retail-points-symbol -- the label shows in the click popup.
+function addProjectPointsLayer(map) {
+  map.addSource("project-points", {
+    type: "geojson",
+    data: { type: "FeatureCollection", features: [] },
+  });
+
+  map.addLayer({
+    id: "project-points-circle",
+    type: "circle",
+    source: "project-points",
+    paint: {
+      "circle-radius": 8,
+      "circle-color": "#7A1F1F",
+      "circle-stroke-color": "#FFFFFF",
+      "circle-stroke-width": 2,
+    },
+  });
+
+  map.on("click", "project-points-circle", (e) => {
+    const p = e.features[0].properties;
+    new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<h4>${p.label}</h4>`).addTo(map);
+  });
+
+  map.on("mouseenter", "project-points-circle", () => (map.getCanvas().style.cursor = "pointer"));
+  map.on("mouseleave", "project-points-circle", () => (map.getCanvas().style.cursor = ""));
+}
+
+// Updates the project-points source from a project's saved points array
+// (each point: { id, lng, lat, label }).
+export function setProjectPoints(map, points) {
+  const source = map.getSource("project-points");
+  if (!source) return;
+
+  source.setData({
+    type: "FeatureCollection",
+    features: points.map((point) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [point.lng, point.lat] },
+      properties: { id: point.id, label: point.label },
+    })),
+  });
 }
 
 export const TOGGLEABLE_LAYERS = {

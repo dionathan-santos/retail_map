@@ -348,3 +348,234 @@ html, body {
   background: #F5F7FA;
   cursor: pointer;
 }
+
+/* Projects drawer floats above #right-rail (same top-right anchor) when
+   toggled open, so it doesn't require reshuffling the existing right-rail
+   panels. */
+#projects-panel {
+  top: 60px;
+  right: 12px;
+  bottom: 24px;
+  width: 280px;
+  overflow-y: auto;
+  z-index: 15;
+  display: none;
+}
+
+#projects-panel.visible {
+  display: block;
+}
+
+#projects-panel h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--brand-navy);
+}
+
+#projects-panel h4 {
+  margin: 16px 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6B7280;
+}
+
+.projects-new-btn {
+  width: 100%;
+  background: var(--brand-navy);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.projects-new-btn:hover {
+  opacity: 0.9;
+}
+
+.projects-empty {
+  color: #6B7280;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.project-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.project-row.active {
+  background: #EAF1F8;
+}
+
+.project-row-info {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.project-row-info span {
+  color: #6B7280;
+}
+
+.project-row-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.project-row-actions button {
+  border: 1px solid var(--panel-border);
+  background: white;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.project-delete-btn {
+  color: #C0392B;
+}
+
+.active-project-box {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--brand-navy);
+  border-radius: 6px;
+  background: #F5F8FC;
+}
+
+.active-project-title {
+  font-weight: 700;
+  color: var(--brand-navy);
+}
+
+.active-project-meta {
+  font-size: 11px;
+  color: #6B7280;
+  margin: 2px 0 8px;
+}
+
+.projects-add-point-btn,
+.projects-save-btn,
+.projects-close-btn {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--brand-navy);
+  background: white;
+  color: var(--brand-navy);
+  border-radius: 4px;
+  padding: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.projects-add-point-btn.active {
+  background: #7A1F1F;
+  border-color: #7A1F1F;
+  color: white;
+}
+
+.project-points-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.project-points-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 3px 0;
+}
+
+.project-point-remove {
+  border: none;
+  background: none;
+  color: #C0392B;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#project-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.4);
+  align-items: center;
+  justify-content: center;
+}
+
+#project-modal-overlay.visible {
+  display: flex;
+}
+
+.project-modal {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 320px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.project-modal h3 {
+  margin: 0 0 12px;
+  color: var(--brand-navy);
+}
+
+.project-modal label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.project-modal input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.project-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.project-modal-actions button {
+  border: none;
+  border-radius: 4px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#new-project-cancel {
+  background: #EEE;
+  color: var(--brand-ink);
+}
+
+#new-project-submit {
+  background: var(--brand-navy);
+  color: white;
+}
