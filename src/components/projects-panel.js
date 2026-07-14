@@ -149,6 +149,12 @@ async function switchProject(project) {
   setCurrentProject(project);
   await Promise.all([refreshPoints(mapRef), drawApiRef.refreshShapes(project?.id ?? null)]);
   await render();
+
+  // The drawer floats above #right-rail (Add Point, Bulk Upload, ...), so
+  // leaving it open after entering/exiting a project hides the very tools
+  // you'd use next. Close it now that the switch is done -- the header
+  // button still shows which environment is active (see main.js).
+  panelRef.classList.remove("visible");
 }
 
 function openNewProjectModal() {
