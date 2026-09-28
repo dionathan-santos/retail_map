@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 
-// Print sizes in points (72pt/in), landscape.
+// Print sizes in points (72pt/in), portrait (width = short edge, height =
+// long edge) -- matches the source map's own orientation, see below.
 const PAGE_SIZES = {
   A4: { width: 595.28, height: 841.89 },
   A1: { width: 1683.78, height: 2383.94 },
@@ -24,14 +25,18 @@ const INCLUDE_LEGEND = false;
 
 export async function exportMapToPdf(map, { size = "A1" } = {}) {
   const { width, height } = PAGE_SIZES[size];
-  const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: [height, width] });
+  // Portrait, not landscape: the source map (the Avison Young/FIKA poster
+  // rendered to public/basemap.png) is itself taller than wide. Exporting
+  // to a landscape page meant fitBounds() had to squeeze that portrait
+  // content into a much wider canvas, leaving it small and centered with
+  // blank background color padding both sides -- portrait page = portrait
+  // content, so the capture fills the page edge-to-edge instead.
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: [width, height] });
 
-  // jsPDF's actual rendered page width/height don't necessarily match our
-  // local `width`/`height` vars -- with this orientation+format combo it
-  // swaps them (pageSize.getWidth() here is our `height` value, not
-  // `width`). Read the real values back instead of assuming, or the map
-  // image ends up sized for the wrong axis (was leaving a gap on one edge
-  // and getting clipped on the other).
+  // Read the actual rendered page width/height back instead of assuming
+  // they match our local `width`/`height` vars, in case a future jsPDF
+  // version normalizes the format/orientation combo differently than this
+  // one does.
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
