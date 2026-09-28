@@ -12,6 +12,7 @@ export const DEFAULT_CATEGORIES = {
   large_format_anchor: { label: "Large Format Anchor", color: "#1F4E79", shape: "diamond", size: DEFAULT_ICON_SIZE },
   specialty: { label: "Specialty", color: "#5B3A9B", shape: "star", size: DEFAULT_ICON_SIZE },
   enclosed_malls: { label: "Enclosed Malls", color: "#B5590A", shape: "hexagon", size: DEFAULT_ICON_SIZE },
+  cannabis: { label: "Cannabis", color: "#F5C500", shape: "star", size: DEFAULT_ICON_SIZE },
   other: { label: "Other", color: "#6B7280", shape: "circle", size: DEFAULT_ICON_SIZE },
 };
 
