@@ -9,9 +9,10 @@ described there with a static georeferenced base map + user-added points.
 ## Stack
 
 - **Map renderer:** MapLibre GL JS
-- **Basemap:** the Avison Young base map (`assets/source/Retail map_no
-  icons.pdf`), rendered once to a high-res PNG and georeferenced with the
-  existing affine transform, then loaded as a MapLibre raster/image source.
+- **Basemap:** the FIKA locations base map (`assets/source/FIKA_Locations_Sept_2026.pdf`),
+  rendered once to a high-res PNG and georeferenced with an affine transform
+  fitted from ground control points, then loaded as a MapLibre raster/image
+  source.
 - **Hosting:** Cloudflare Workers (with static assets) — the dashboard's
   "Create a Worker" + Git integration flow, which is what Cloudflare's
   unified Workers & Pages UI offers now (classic standalone Pages projects

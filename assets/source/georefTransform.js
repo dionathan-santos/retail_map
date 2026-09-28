@@ -2,14 +2,14 @@
  * Edmonton Retail Map - Georeferencing Transform (JS)
  * ====================================================
  * Same affine transform as georef_transform.py.
- * Fit quality: ~72m RMS error on 3 held-out validation points.
+ * Fit quality: ~62m RMS error (fit residual over all 13 GCPs).
  */
 
-const COEF_LAT = [-6.88875213e-07, -6.94089680e-04, 5.37955094e+01]; // A, B, C
-const COEF_LNG = [1.16913960e-03, 2.14955514e-06, -1.13849672e+02];  // D, E, F
+const COEF_LAT = [3.2072916597663463e-07, -0.00024140659421560684, 53.75376597265131]; // A, B, C
+const COEF_LNG = [0.0004060013354489014, -3.050634297258048e-07, -113.7464823774099];  // D, E, F
 
-const PDF_PAGE_WIDTH = 612.0;
-const PDF_PAGE_HEIGHT = 792.0;
+const PDF_PAGE_WIDTH = 1404.0;
+const PDF_PAGE_HEIGHT = 1800.0;
 
 function pdfToLatLng(xPdf, yPdf) {
   const [A, B, C] = COEF_LAT;

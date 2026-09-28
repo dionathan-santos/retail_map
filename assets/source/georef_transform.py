@@ -1,12 +1,11 @@
 """
 Edmonton Retail Map - Georeferencing Transform
 ================================================
-Converts between PDF/AI coordinate space (points, 612x792 pt page)
+Converts between PDF/AI coordinate space (points, 1404x1800 pt page)
 and real-world lat/lng, using an affine transform fitted from
-12 manually-clicked ground control points (GCPs).
+13 manually-clicked ground control points (GCPs).
 
-Fit quality: ~72m RMS error on 3 held-out validation points
-(not used to build the transform).
+Fit quality: ~62m RMS error (fit residual over all 13 GCPs).
 
 Usage:
     from georef_transform import pdf_to_latlng, latlng_to_pdf
@@ -18,12 +17,12 @@ Usage:
 import numpy as np
 
 # Affine coefficients: lat = A*x + B*y + C ; lng = D*x + E*y + F
-_COEF_LAT = np.array([-6.88875213e-07, -6.94089680e-04, 5.37955094e+01])
-_COEF_LNG = np.array([1.16913960e-03, 2.14955514e-06, -1.13849672e+02])
+_COEF_LAT = np.array([3.2072916597663463e-07, -0.00024140659421560684, 53.75376597265131])
+_COEF_LNG = np.array([0.0004060013354489014, -3.050634297258048e-07, -113.7464823774099])
 
 # Source PDF page size (pts) this transform was fitted against
-PDF_PAGE_WIDTH = 612.0
-PDF_PAGE_HEIGHT = 792.0
+PDF_PAGE_WIDTH = 1404.0
+PDF_PAGE_HEIGHT = 1800.0
 
 
 def pdf_to_latlng(x_pdf: float, y_pdf: float) -> tuple[float, float]:
