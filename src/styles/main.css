@@ -319,6 +319,13 @@ html, body {
   max-width: 90px;
 }
 
+.category-style-row-all {
+  border-bottom: 1px solid #D8D4C8;
+  margin-bottom: 4px;
+  padding-bottom: 8px;
+  font-weight: 600;
+}
+
 #icon-bank-list {
   margin-top: 8px;
   max-height: 160px;

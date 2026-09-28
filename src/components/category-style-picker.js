@@ -13,6 +13,14 @@ export async function renderCategoryStylePicker(map, categories) {
 
   panel.innerHTML = "<h3>Category Icons</h3>";
 
+  const resizeAllRow = document.createElement("div");
+  resizeAllRow.className = "category-style-row category-style-row-all";
+  resizeAllRow.innerHTML = `
+    <span>All categories</span>
+    <input type="range" min="0.2" max="2" step="0.1" value="1" data-field="size-all" title="Resize every category's icons at once" />
+  `;
+  panel.appendChild(resizeAllRow);
+
   for (const [key, style] of Object.entries(categories)) {
     const row = document.createElement("div");
     row.className = "category-style-row";
@@ -36,6 +44,26 @@ export async function renderCategoryStylePicker(map, categories) {
 
   panel.addEventListener("change", async (e) => {
     const { key, field } = e.target.dataset;
+
+    if (field === "size-all") {
+      const size = Number(e.target.value);
+      await Promise.all(
+        Object.entries(categories).map(([k, style]) => {
+          style.size = size;
+          return saveCategoryStyle(k, {
+            label: style.label,
+            color: style.color,
+            shape: style.shape,
+            iconId: style.iconId || null,
+            size: style.size,
+          });
+        })
+      );
+      await refreshPoints(map);
+      await renderCategoryStylePicker(map, categories);
+      return;
+    }
+
     if (!key || !field) return;
 
     if (field === "iconId") {
