@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 
 // Print sizes in points (72pt/in), landscape.
 const PAGE_SIZES = {
+  A4: { width: 595.28, height: 841.89 },
   A1: { width: 1683.78, height: 2383.94 },
   A0: { width: 2383.94, height: 3370.87 },
 };
