@@ -186,7 +186,15 @@ function pointsToGeoJson(points, categories) {
       geometry: { type: "Point", coordinates: [p.lng, p.lat] },
       properties: {
         ...p,
-        iconImageId: p.icon_id ? `custom-icon-${p.icon_id}` : `icon-${p.category}`,
+        // Falls back to icon-other for a category with no registered sprite
+        // image (e.g. a typo, or a bulk-upload category nobody's styled
+        // yet) -- otherwise MapLibre can't find the image and the point
+        // renders nowhere, with no error visible to the user.
+        iconImageId: p.icon_id
+          ? `custom-icon-${p.icon_id}`
+          : categories[p.category]
+          ? `icon-${p.category}`
+          : "icon-other",
         iconSize: p.icon_size ?? categoryStyle(categories, p.category).size ?? DEFAULT_ICON_SIZE,
       },
     })),
