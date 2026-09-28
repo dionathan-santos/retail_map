@@ -41,13 +41,22 @@ export async function exportMapToPdf(map, { size = "A1" } = {}) {
   const pageHeight = pdf.internal.pageSize.getHeight();
 
   const mapAreaWidthPt = INCLUDE_LEGEND ? pageWidth * 0.82 : pageWidth;
-  const pxWidth = Math.round((mapAreaWidthPt / 72) * EXPORT_DPI);
+
+  // Capture at the on-screen view's own aspect ratio, not the page's --
+  // that way fitBounds() inside captureAtResolution doesn't need to pad
+  // any axis to reframe the current view into a differently-shaped
+  // canvas (which was leaving a band of the map's background color where
+  // the two ratios didn't match, e.g. an A4 page vs. the basemap's own
+  // ~0.78 aspect). addImage below then stretches that capture to fill
+  // the full page -- a few percent of non-uniform scale in exchange for
+  // an edge-to-edge print with no padding.
+  const container = map.getContainer();
+  const viewAspect = container.clientWidth / container.clientHeight;
   const pxHeight = Math.round((pageHeight / 72) * EXPORT_DPI);
+  const pxWidth = Math.round(pxHeight * viewAspect);
 
   const imageData = await captureAtResolution(map, pxWidth, pxHeight);
 
-  // pxWidth/pxHeight share the exact aspect ratio of mapAreaWidthPt/pageHeight,
-  // so this never stretches the captured image.
   pdf.addImage(imageData, "PNG", 0, 0, mapAreaWidthPt, pageHeight);
 
   if (INCLUDE_LEGEND) {
