@@ -20,11 +20,17 @@ from georef_transform import pdf_to_latlng  # noqa: E402
 SOURCE_PDF = Path(__file__).parent.parent / "assets" / "source" / "FIKA_Locations_Sept_2026.pdf"
 OUT_PNG = Path(__file__).parent.parent / "public" / "basemap.png"
 OUT_CONFIG = Path(__file__).parent.parent / "src" / "basemap-config.json"
-# This PDF's page (1404x1800pt) is ~2.3x larger than the old one (612x792pt)
-# it replaces -- SCALE=6 would render ~8424x10800px, over the ~4096-8192px
-# MAX_TEXTURE_SIZE some GPUs enforce for image-source textures. SCALE=2 keeps
-# the output (2808x3600px) safely under that on any hardware.
-SCALE = 2
+# MapLibre's "image" source uploads this whole PNG as a single WebGL
+# texture (no tiling), so its max dimension is capped by the GPU's
+# MAX_TEXTURE_SIZE. SCALE=2 (2808x3600px) was conservative enough to be
+# safe on any hardware, but visibly soft at print/zoom. 8192px is the de
+# facto floor on any GPU from roughly the last decade (even most
+# integrated/mobile chips; the WebGL spec minimum is 2048, but real
+# hardware that low is now rare) -- SCALE=3.5 (4914x6300px) stays well
+# under that with headroom, while roughly tripling pixel density over
+# SCALE=2. Push higher only if genuinely necessary; going much past this
+# risks the basemap silently failing to render on older/low-end GPUs.
+SCALE = 3.5
 
 
 def main():
