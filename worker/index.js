@@ -283,7 +283,10 @@ async function updatePoint(id, request, env) {
     `UPDATE points SET name = ?, category = ?, lat = ?, lng = ?, address = ?, status = ?, source = ?,
        last_updated = ?, icon_color = ?, icon_shape = ?, icon_id = ?, icon_size = ? WHERE id = ?`
   )
-    .bind(...pointBindings(point), id)
+    // pointBindings() also returns project_id (for the INSERT statement,
+    // which has that column) -- this UPDATE doesn't touch project_id, so
+    // drop it before appending id, or D1 gets 14 bound values for 13 `?`s.
+    .bind(...pointBindings(point).slice(0, -1), id)
     .run();
 
   return Response.json({ id, ...point });
