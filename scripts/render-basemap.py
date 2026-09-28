@@ -1,7 +1,7 @@
 """
-Renders assets/source/Retail map_no icons.pdf to a high-res PNG and computes
-the lat/lng of its 4 corners using the existing georef transform, for use as
-a MapLibre raster/image source (Option A from RETAIL_MAP_SPEC_v2.md).
+Renders assets/source/FIKA_Locations_Sept_2026.pdf to a high-res PNG and
+computes the lat/lng of its 4 corners using the existing georef transform,
+for use as a MapLibre raster/image source (Option A from RETAIL_MAP_SPEC_v2.md).
 
 Usage:
     pip install pymupdf numpy
@@ -17,10 +17,14 @@ import fitz
 sys.path.insert(0, str(Path(__file__).parent.parent / "assets" / "source"))
 from georef_transform import pdf_to_latlng  # noqa: E402
 
-SOURCE_PDF = Path(__file__).parent.parent / "assets" / "source" / "Retail map_no icons.pdf"
+SOURCE_PDF = Path(__file__).parent.parent / "assets" / "source" / "FIKA_Locations_Sept_2026.pdf"
 OUT_PNG = Path(__file__).parent.parent / "public" / "basemap.png"
 OUT_CONFIG = Path(__file__).parent.parent / "src" / "basemap-config.json"
-SCALE = 6  # 6x -> ~3672x4752px, high enough for A0/A1 print export
+# This PDF's page (1404x1800pt) is ~2.3x larger than the old one (612x792pt)
+# it replaces -- SCALE=6 would render ~8424x10800px, over the ~4096-8192px
+# MAX_TEXTURE_SIZE some GPUs enforce for image-source textures. SCALE=2 keeps
+# the output (2808x3600px) safely under that on any hardware.
+SCALE = 2
 
 
 def main():
