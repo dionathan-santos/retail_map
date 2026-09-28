@@ -27,6 +27,7 @@ async function main() {
     renderProjectsPanel(map, drawApi);
   });
 
+  document.getElementById("export-a4").addEventListener("click", () => exportMapToPdf(map, { size: "A4" }));
   document.getElementById("export-a1").addEventListener("click", () => exportMapToPdf(map, { size: "A1" }));
   document.getElementById("export-a0").addEventListener("click", () => exportMapToPdf(map, { size: "A0" }));
 
