@@ -41,19 +41,8 @@ export async function exportMapToPdf(map, { size = "A1" } = {}) {
   const pageHeight = pdf.internal.pageSize.getHeight();
 
   const mapAreaWidthPt = INCLUDE_LEGEND ? pageWidth * 0.82 : pageWidth;
-
-  // Capture at the on-screen view's own aspect ratio, not the page's --
-  // that way fitBounds() inside captureAtResolution doesn't need to pad
-  // any axis to reframe the current view into a differently-shaped
-  // canvas (which was leaving a band of the map's background color where
-  // the two ratios didn't match, e.g. an A4 page vs. the basemap's own
-  // ~0.78 aspect). addImage below then stretches that capture to fill
-  // the full page -- a few percent of non-uniform scale in exchange for
-  // an edge-to-edge print with no padding.
-  const container = map.getContainer();
-  const viewAspect = container.clientWidth / container.clientHeight;
+  const pxWidth = Math.round((mapAreaWidthPt / 72) * EXPORT_DPI);
   const pxHeight = Math.round((pageHeight / 72) * EXPORT_DPI);
-  const pxWidth = Math.round(pxHeight * viewAspect);
 
   const imageData = await captureAtResolution(map, pxWidth, pxHeight);
 
@@ -84,6 +73,11 @@ async function captureAtResolution(map, pxWidth, pxHeight) {
   // bounds afterwards so the captured frame matches what's on screen.
   const originalView = { center: map.getCenter(), zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch() };
   const bounds = map.getBounds();
+  // The on-screen container's own aspect ratio (before resize) -- bounds
+  // was read from exactly this rectangle, so this is also `bounds`' own
+  // aspect ratio, without needing any trig to work it out.
+  const boundsAspect = container.clientWidth / container.clientHeight;
+  const targetAspect = pxWidth / pxHeight;
 
   container.style.position = "fixed";
   container.style.left = "-100000px";
@@ -94,7 +88,17 @@ async function captureAtResolution(map, pxWidth, pxHeight) {
 
   try {
     map.resize();
+    // fitBounds does a "contain" fit: the whole bounds box visible, which
+    // leaves blank space (the map's own background color) on whichever
+    // axis doesn't match the export canvas's aspect ratio -- e.g. a
+    // portrait A4 page vs. the basemap's own slightly different portrait
+    // ratio. Zoom in just enough afterwards to convert that into a
+    // "cover" fit instead (like CSS object-fit: cover): the canvas ends
+    // up fully covered by map content, at the cost of cropping a sliver
+    // off the constrained axis, rather than showing blank background.
     map.fitBounds(bounds, { animate: false, padding: 0 });
+    const coverZoomDelta = Math.log2(Math.max(boundsAspect, targetAspect) / Math.min(boundsAspect, targetAspect));
+    map.setZoom(map.getZoom() + coverZoomDelta);
     map.triggerRepaint();
     await waitForIdle(map);
 
